@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRIBU — Calibrateur</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #101312;
+  color: #eee;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  padding: 12px 16px;
+  background: #1b211f;
+}
+
+main {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 350px;
+  gap: 12px;
+  padding: 12px;
+
+  /* IMPORTANT :
+     empêche la carte de prendre la hauteur du panneau de droite */
+  align-items: start;
+}
+
+#stage {
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  align-self: start;
+  line-height: 0;
+}
+
+#map {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 3px solid black;
+
+  background: white;
+  color: black;
+
+  font-size: 12px;
+  font-weight: bold;
+
+  pointer-events: none;
+}
+
+.marker.sea {
+  width: 46px;
+  height: 46px;
+  background: #bdefff;
+}
+
+.marker.selected {
+  outline: 5px solid #ff2bc7;
+  z-index: 10;
+}
+
+aside {
+  background: #1b211f;
+  border-radius: 8px;
+  padding: 14px;
+
+  /* IMPORTANT :
+     le panneau ne force plus la hauteur de la carte */
+  align-self: start;
+}
+
+select,
+button {
+  padding: 8px;
+  margin: 4px 2px;
+  font-size: 15px;
+}
+
+.instructions {
+  margin: 12px 0;
+  padding: 10px;
+  background: #29302d;
+  border-radius: 6px;
+}
+
+#coords {
+  margin-top: 10px;
+  padding: 8px;
+  background: #090b0a;
+
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 12px;
+
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+@media(max-width:900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <b>TRIBU — Calibrateur des régions</b>
+</header>
+
+<main>
+
+<div id="stage">
+
+  <!--
+  IMPORTANT :
+  l'image doit être dans le même dépôt GitHub.
+  Si ton image porte un autre nom, change map.png ci-dessous.
+  -->
+
+  <img id="map" src="map.png">
+
+</div>
+
+<aside>
+
+<h3>Calibration</h3>
+
+<div>
+  Région :
+  <select id="selector"></select>
+</div>
+
+<div>
+  <button id="previous">◀ précédente</button>
+  <button id="next">suivante ▶</button>
+</div>
+
+<div class="instructions">
+
+<b>Comment faire :</b><br><br>
+
+1. Choisis par exemple <b>A1</b>.<br>
+2. Clique exactement au centre de A1 sur la carte.<br>
+3. Le rond doit apparaître exactement sous ton clic.<br>
+4. Passe ensuite à A2, A3, etc.
+
+</div>
+
+<div>
+Zone actuelle :
+<b id="current"></b>
+</div>
+
+<div>
+Position :
+<b id="position"></b>
+</div>
+
+<button id="undo">Annuler le dernier placement</button>
+
+<h3>Coordonnées finales</h3>
+
+<div id="coords"></div>
+
+</aside>
+
+</main>
+
+<script>
+
+/* ==========================================================
+   LISTE DES ZONES
+   ========================================================== */
+
+const ids = [
+
+"A1","A2","A3","A4","A5",
+"B1","B2","B3","B4","B5",
+"C1","C2","C3","C4","C5",
+"D1","D2","D3","D4","D5",
+"E1","E2","E3","E4","E5",
+"F1","F2","F3","F4","F5",
+"G1","G2","G3","G4","G5",
+"H1","H2","H3","H4","H5",
+"I1","I2","I3","I4","I5",
+"U","V","W","X","Y","Z"
+
+];
+
+
+/* ==========================================================
+   POSITIONS
+
+   Elles sont volontairement initialisées au centre.
+   Tu vas les remplacer en cliquant.
+   ========================================================== */
+
+const positions = {};
+
+ids.forEach(id => {
+  positions[id] = [50,50];
+});
+
+
+/* ==========================================================
+   VARIABLES
+   ========================================================== */
+
+const stage =
+  document.getElementById("stage");
+
+const map =
+  document.getElementById("map");
+
+const selector =
+  document.getElementById("selector");
+
+const coords =
+  document.getElementById("coords");
+
+const current =
+  document.getElementById("current");
+
+const positionText =
+  document.getElementById("position");
+
+const history = [];
+
+
+/* ==========================================================
+   MENU
+   ========================================================== */
+
+ids.forEach(id => {
+
+  const option =
+    document.createElement("option");
+
+  option.value = id;
+  option.textContent = id;
+
+  selector.appendChild(option);
+
+});
+
+selector.value = "A1";
+
+
+/* ==========================================================
+   MER ?
+   ========================================================== */
+
+function isSea(id) {
+
+  return [
+    "U","V","W","X","Y","Z"
+  ].includes(id);
+
+}
+
+
+/* ==========================================================
+   AFFICHAGE
+   ========================================================== */
+
+function render() {
+
+  stage
+    .querySelectorAll(".marker")
+    .forEach(el => el.remove());
+
+
+  ids.forEach(id => {
+
+    const marker =
+      document.createElement("div");
+
+    marker.className =
+      "marker"
+      + (isSea(id) ? " sea" : "")
+      + (selector.value === id
+          ? " selected"
+          : "");
+
+    marker.textContent = id;
+
+    marker.style.left =
+      positions[id][0] + "%";
+
+    marker.style.top =
+      positions[id][1] + "%";
+
+    stage.appendChild(marker);
+
+  });
+
+
+  const p =
+    positions[selector.value];
+
+  current.textContent =
+    selector.value;
+
+  positionText.textContent =
+    p[0].toFixed(2)
+    + "% / "
+    + p[1].toFixed(2)
+    + "%";
+
+
+  coords.textContent =
+    ids.map(id => {
+
+      const p = positions[id];
+
+      return id
+        + ": ["
+        + p[0].toFixed(2)
+        + ", "
+        + p[1].toFixed(2)
+        + "]";
+
+    }).join("\n");
+
+}
+
+
+/* ==========================================================
+   CLIC SUR LA CARTE
+
+   Le calcul est fait EXCLUSIVEMENT
+   par rapport au rectangle réel de l'image.
+   ========================================================== */
+
+stage.addEventListener(
+  "click",
+  event => {
+
+    const rect =
+      map.getBoundingClientRect();
+
+
+    /* On ignore les clics hors de l'image */
+
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      return;
+    }
+
+
+    /*
+    Position du clic dans l'image affichée
+    */
+
+    const displayX =
+      event.clientX - rect.left;
+
+    const displayY =
+      event.clientY - rect.top;
+
+
+    /*
+    Conversion directe en %
+    */
+
+    const x =
+      displayX /
+      rect.width *
+      100;
+
+    const y =
+      displayY /
+      rect.height *
+      100;
+
+
+    const id =
+      selector.value;
+
+
+    history.push({
+      id: id,
+      old:
+        positions[id].slice()
+    });
+
+
+    positions[id] =
+      [x,y];
+
+
+    render();
+
+  }
+);
+
+
+/* ==========================================================
+   CHANGEMENT DE RÉGION
+   ========================================================== */
+
+selector.addEventListener(
+  "change",
+  render
+);
+
+
+/* ==========================================================
+   PRÉCÉDENT / SUIVANT
+   ========================================================== */
+
+document
+.getElementById("previous")
+.onclick = () => {
+
+  let index =
+    ids.indexOf(
+      selector.value
+    );
+
+  index--;
+
+  if(index < 0)
+    index =
+      ids.length - 1;
+
+  selector.value =
+    ids[index];
+
+  render();
+
+};
+
+
+document
+.getElementById("next")
+.onclick = () => {
+
+  let index =
+    ids.indexOf(
+      selector.value
+    );
+
+  index++;
+
+  if(index >= ids.length)
+    index = 0;
+
+  selector.value =
+    ids[index];
+
+  render();
+
+};
+
+
+/* ==========================================================
+   ANNULER
+   ========================================================== */
+
+document
+.getElementById("undo")
+.onclick = () => {
+
+  const previous =
+    history.pop();
+
+  if(!previous)
+    return;
+
+  positions[previous.id] =
+    previous.old;
+
+  selector.value =
+    previous.id;
+
+  render();
+
+};
+
+
+/* ==========================================================
+   DÉMARRAGE
+   ========================================================== */
+
+map.onload = render;
+
+render();
+
+</script>
+
+</body>
+</html>
