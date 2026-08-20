@@ -36,6 +36,12 @@ button,select{font:inherit;padding:8px 10px}button{cursor:pointer}button:disable
 .battle-box h2{margin:0 0 10px}.battle-line{display:flex;justify-content:space-between;gap:10px;padding:8px;background:#262e2b;border-radius:7px;margin:6px 0}
 .battle-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.battle-actions button{flex:1;min-width:120px}
 .timer{font-size:24px;font-weight:900;text-align:center;margin:10px}.stack-card{padding:5px 8px;background:#303a36;border-radius:5px;margin:3px 0}
+
+.hand{display:grid;gap:6px;max-height:260px;overflow:auto}
+.carditem{background:#262e2b;border:1px solid #47534d;border-radius:7px;padding:7px}
+.carditem b{display:block}.carditem small{display:block;color:#cfd6d2;margin-top:3px}
+.carditem button{margin-top:6px;width:100%}
+.handcount{font-weight:700}
 </style></head>
 <body>
 <header><b>TRIBU — prototype jouable 0.3.1</b><span class="badge">map calibrée</span><span class="badge">3 joueurs test</span></header>
@@ -74,6 +80,7 @@ button,select{font:inherit;padding:8px 10px}button{cursor:pointer}button:disable
 <div class="row"><button id="rollOracle" disabled>Lancer le dé Oracle</button></div>
 </div>
 
+<div class="section"><b>Main — <span id="handCount"></span></b><div id="hand" class="hand"></div></div>
 <div class="section"><b>Journal</b><div id="log" class="log"></div></div>
 <div class="section"><button id="reset">Réinitialiser la partie test</button></div>
 </aside>
@@ -91,6 +98,7 @@ button,select{font:inherit;padding:8px 10px}button{cursor:pointer}button:disable
 <script>
 const DATA={"R":{"A1":["A","e",0,["A2"],["U"]],"A2":["A","e",0,["A1"],[]],"A3":["A","e",0,["A4"],["U"]],"A4":["A","e",0,["A3"],[]],"A5":["A","e",1,["B1","B2"],["U"]],"B1":["B","e",0,["A5","B2"],[]],"B2":["B","e",0,["A5","B1"],["V"]],"B3":["B","t",1,["B4"],[]],"B4":["B","t",0,["B3"],["V"]],"B5":["B","t",0,[],["V"]],"C1":["C","e",0,["C2","C4"],["U"]],"C2":["C","e",0,["C1","C3","C4"],[]],"C3":["C","e",1,["C2","C4","E1","F1"],[]],"C4":["C","t",0,["C1","C2","C3","C5","E1"],[]],"C5":["C","t",0,["C4","E1","E2","D1"],["W"]],"D1":["D","t",0,["C5","E2","D2","D5"],["W"]],"D2":["D","t",0,["D1","D3","D4","D5"],[]],"D3":["D","t",0,["D2","D4"],[]],"D4":["D","t",0,["D2","D3","D5","G1"],["X"]],"D5":["D","t",1,["D1","D2","D4","E2","E3","G1"],[]],"E1":["E","t",0,["C3","C4","C5","E2","E4","F1","F2"],[]],"E2":["E","t",0,["E1","E3","E4","C5","D1","D5"],[]],"E3":["E","t",0,["E2","E4","E5","D5","G1","G2"],[]],"E4":["E","t",1,["E1","E2","E3","E5","F2","F4"],[]],"E5":["E","t",0,["E3","E4","F4","F5","G2","G3"],[]],"F1":["F","t",0,["C3","E1","F2","F3"],["V"]],"F2":["F","t",0,["E1","E4","F1","F3","F4"],[]],"F3":["F","t",1,["F1","F2","F4"],[]],"F4":["F","t",0,["F2","F3","F5","E4","E5"],[]],"F5":["F","t",0,["E5","F4","G3"],["V"]],"G1":["G","t",0,["D4","D5","E3","G2"],["X"]],"G2":["G","d",1,["G1","G3","G4","E3","E5"],[]],"G3":["G","d",0,["G2","G4","G5","F5","E5"],[]],"G4":["G","d",0,["G2","G3","G5"],[]],"G5":["G","d",0,["G3","G4"],["Z"]],"H1":["H","t",0,["H2","H3"],[]],"H2":["H","t",0,["H1","H3","H5"],[]],"H3":["H","t",1,["H1","H2","H4","H5"],[]],"H4":["H","t",0,["H3","H5","I1"],["X"]],"H5":["H","d",0,["H2","H3","H4","I1","I2"],["Y"]],"I1":["I","d",0,["H4","H5","I2","I3"],[]],"I2":["I","d",0,["H5","I1","I3","I4"],["Y"]],"I3":["I","d",0,["I1","I2","I4","I5"],[]],"I4":["I","d",0,["I2","I3","I5"],[]],"I5":["I","d",1,["I3","I4"],["Z"]]},"SEA":{"U":["W","V"],"V":["U","Z"],"W":["U","X","Y"],"X":["W","Z","Y"],"Y":["W","X","Z"],"Z":["V","X","Y"]},"PORTS":{"U":["A1","A3","A5","C1"],"V":["B2","B4","B5","F1","F5"],"W":["C5","D1"],"X":["D4","G1","H4"],"Y":["H5","I2"],"Z":["G5","I5"]},"POS":{"A1":[9.46,28.86],"A2":[9.26,39.04],"A3":[14.84,43.36],"A4":[18.03,47.96],"A5":[13.15,59.53],"B1":[9.46,66.37],"B2":[16.14,68.32],"B3":[8.96,83.79],"B4":[13.94,81.7],"B5":[23.41,87.28],"C1":[26.1,23.84],"C2":[25.9,34.02],"C3":[26.79,44.62],"C4":[33.96,29.56],"C5":[41.33,35.97],"D1":[51.89,37.37],"D2":[59.76,31.79],"D3":[70.42,29.42],"D4":[64.94,38.34],"D5":[57.97,44.34],"E1":[35.46,46.71],"E2":[47.41,45.45],"E3":[55.28,53.12],"E4":[43.13,54.52],"E5":[50.7,61.9],"F1":[28.19,56.61],"F2":[36.25,60.79],"F3":[34.06,69.02],"F4":[43.23,69.57],"F5":[50.9,71.66],"G1":[64.84,52.28],"G2":[64.14,62.04],"G3":[60.66,73.06],"G4":[69.72,70.69],"G5":[67.63,82.26],"H1":[84.26,23.84],"H2":[88.45,28.16],"H3":[83.07,35.0],"H4":[81.57,46.57],"H5":[86.85,42.52],"I1":[82.17,55.21],"I2":[89.14,56.19],"I3":[82.57,64.83],"I4":[89.04,67.48],"I5":[85.76,77.1],"U":[16.24,17.01],"V":[29.88,79.61],"W":[48.8,24.12],"X":[73.41,49.36],"Y":[95.22,37.23],"Z":[77.79,87.42]},"PV":{"A":1,"B":1,"C":2,"D":2,"E":3,"F":2,"G":2,"H":1,"I":1}};
 const {R,SEA,PORTS,POS,PV}=DATA;
+const CARD_DEFS=[{"name":"Assassin","count":4,"type":"Tactique","effect":"Lancez un dé. Sur 4, 5 ou 6, éliminez l’Agent ou le Héros ciblé. Sur 1, 2 ou 3, l’effet échoue et la carte est défaussée."},{"name":"Balistes","count":4,"type":"Tactique","effect":"+2 d’Attaque sur toutes vos attaques jusqu’à la fin du tour si vous attaquez, ou +2 de Défense sur toutes vos défenses jusqu’à la fin du tour du joueur actif si vous êtes attaqué."},{"name":"Caravane de commerce","count":2,"type":"Tactique","effect":"Révélez autant de cartes Tribu qu’il y a de joueurs. Dans le sens horaire à partir de vous, chacun choisit une carte et l’ajoute à sa main."},{"name":"Catapultes","count":3,"type":"Tactique","effect":"+5 d’Attaque ou de Défense durant une bataille."},{"name":"Conseil de guerre","count":3,"type":"Tactique","effect":"Piochez 2 cartes puis défaussez 2 cartes."},{"name":"Egnobombe","count":1,"type":"Tactique","effect":"Détruisez toutes vos unités d’une région terrestre contenant au moins 5 soldats : toutes les unités sur les régions adjacentes et les aires maritimes reliées sont détruites."},{"name":"Divination de l’Oracle","count":2,"type":"Tactique","effect":"Au choix : activez la carte Oracle visible, ou choisissez une carte Oracle dans la pile, mélangez les autres cartes Oracle (passées comprises) et placez la carte choisie au-dessus."},{"name":"Embuscade","count":3,"type":"Tactique","effect":"Gagnez l’Or qu’un adversaire devait gagner par sa Récolte ou par une carte Tribu. Cet adversaire ne gagne pas cet Or."},{"name":"Espion","count":4,"type":"Permanent — Agent","effect":"Une fois par tour pendant votre Phase de Jeu, regardez une carte au hasard dans la main d’un adversaire."},{"name":"Forteresse","count":3,"type":"Permanent — Bâtiment","effect":"Placez une Forteresse sur une de vos régions : +10 Défense. Elle peut changer de propriétaire et être détruite par le Dragon ou certains effets."},{"name":"Icenia, la cité blanche","count":1,"type":"Permanent — Bâtiment","effect":"Placez Icenia sur une région enneigée : +10 Défense, +5 Or à chaque Récolte. Les unités de la région sont immunisées à Givre mortel. La région reste enneigée malgré les changements de climat."},{"name":"Mur de pique","count":4,"type":"Tactique","effect":"+4 de Défense sur une bataille."},{"name":"Montures","count":2,"type":"Tactique","effect":"Au choix : toutes vos unités gagnent 1 point de déplacement supplémentaire vers une case adjacente jusqu’à la fin de votre tour, ou +4 d’Attaque sur une seule bataille."},{"name":"Murs frontaliers","count":3,"type":"Permanent — Bâtiment","effect":"Toutes vos régions gagnent +1 Défense. Effet cumulable avec d’autres Murs frontaliers. Peut être détruit par certains effets."},{"name":"Pluie de flèches","count":4,"type":"Tactique","effect":"+3 d’Attaque ou de Défense sur une bataille."},{"name":"Sundo, cité du soleil","count":1,"type":"Permanent — Bâtiment","effect":"Placez Sundo sur une région désertique : +10 Défense, +5 Or à chaque Récolte. Les unités de la région sont immunisées à Tempête de sable. La région reste désertique malgré les changements de climat."},{"name":"Taxe","count":4,"type":"Tactique","effect":"Gagnez +1 Or pour chaque case où vous avez des unités, région ou aire maritime."},{"name":"Voleur","count":3,"type":"Permanent — Agent","effect":"Une fois par tour : lancez le dé. 5–6 : volez une carte Objet en jeu ou une carte au hasard dans la main d’un adversaire ; 1 : défaussez le Voleur ; 2–4 : rien. Ou prenez directement une carte vue par un de vos Espions."},{"name":"Section de l’ombre","count":1,"type":"Tactique","effect":"Prenez jusqu’à 6 de vos unités en jeu : elles peuvent conquérir une case de votre choix (sans compter comme déplacement) ou défendre une case où vous êtes attaqué. Une bataille créée ainsi se résout entièrement avant de reprendre la bataille interrompue."},{"name":"Plan des trébuchets","count":2,"type":"Permanent — Objet","effect":"Optionnel en bataille : +1 Attaque contre chaque bonus Murs frontaliers et +5 Attaque contre chaque Forteresse/Cité. Les bâtiments concernés sont détruits si vous gagnez. Non cumulable avec un autre Plan des trébuchets."},{"name":"Portails","count":1,"type":"Permanent — Bâtiment","effect":"Placez deux portails de même couleur sur deux régions terrestres : elles deviennent adjacentes. Inutilisables par le Dragon, inaltérables. La carte peut être jouée comme une Tactique mais reste en jeu. Impossible de poser Cité ou Forteresse sur une région avec portail."},{"name":"Pyrodontes de guerre","count":3,"type":"Tactique","effect":"+5 d’Attaque sur une bataille située en région tempérée. Si le climat cesse d’être tempéré avant la résolution, la carte est jouée pour rien."}];
 const COLORS=['#ff4fc3','#ffd92f','#91e87c','#ef4444','#3b82f6'];
 const FACTIONS=[
  {name:'Griffes-Blanches',cap:3,def:1},
@@ -103,17 +111,43 @@ const map=document.getElementById('map');
 const el=id=>document.getElementById(id);
 const isSea=id=>!!SEA[id];
 
+
+function makeDeck(){
+ const d=[];
+ CARD_DEFS.forEach((c,idx)=>{for(let i=0;i<c.count;i++)d.push(idx)});
+ for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}
+ return d;
+}
+function drawCard(i){
+ if(!G.deck.length){
+   if(!G.discard.length)return null;
+   G.deck=G.discard.splice(0);
+   for(let k=G.deck.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[G.deck[k],G.deck[j]]=[G.deck[j],G.deck[k]]}
+ }
+ const id=G.deck.pop();G.players[i].hand.push(id);return id;
+}
+function drawCards(i,n){for(let k=0;k<n;k++)drawCard(i)}
+function discardFromHand(i,handIndex){
+ const id=G.players[i].hand.splice(handIndex,1)[0];
+ if(id!==undefined)G.discard.push(id);
+ return id;
+}
+function cardDef(id){return CARD_DEFS[id]}
+function isTactical(id){return cardDef(id).type.startsWith('Tactique')}
+
 function init(){
  G={active:0,turn:1,phase:'start',dragon:'E3',players:[
-  {name:'Joueur 1',faction:0,gold:0,cards:3,battlePV:0,provincePV:0},
-  {name:'Joueur 2',faction:1,gold:0,cards:3,battlePV:0,provincePV:0},
-  {name:'Joueur 3',faction:2,gold:0,cards:3,battlePV:0,provincePV:0}
- ],b:{},sea:{},log:[]};
+  {name:'Joueur 1',faction:0,gold:0,hand:[],battlePV:0,provincePV:0},
+  {name:'Joueur 2',faction:1,gold:0,hand:[],battlePV:0,provincePV:0},
+  {name:'Joueur 3',faction:2,gold:0,hand:[],battlePV:0,provincePV:0}
+ ],b:{},sea:{},log:[],deck:[],discard:[]};
  for(const [r,v] of Object.entries(R))G.b[r]={owner:null,units:0,hostile:!!v[2],originalHostile:!!v[2]};
  for(const s in SEA)G.sea[s]={fleets:{}};
+ G.deck=makeDeck();
+ for(let i=0;i<G.players.length;i++)drawCards(i,3);
  [['A1','A3'],['D1','D2'],['H1','H2']].forEach((pair,i)=>pair.forEach(r=>{G.b[r].owner=i;G.b[r].units=3;G.b[r].hostile=false}));
  clearTurnMovement(); dest=null;picks={}; oracleMoved=false;
- addLog('Partie test créée : 3 joueurs, 6 unités chacun, 3 cartes chacun.');
+ addLog('Partie test créée : 3 joueurs, 6 unités chacun, 3 cartes Tribu chacun.');
  render();
 }
 function player(i=G.active){return G.players[i]}
@@ -238,14 +272,15 @@ function passTactical(){
  if(battle.side==='defender'){battle.side='attacker';battle.seconds=10;startTacticalWindow()}
  else resolveSeaBattle();
 }
-function playTestTactical(){
+function playTacticalFromHand(handIndex){
  if(!battle)return;
  const who=battle.side==='attacker'?battle.attacker:battle.defender;
- if(player(who).cards<=0)return;
- player(who).cards--;
- battle.stack.push({owner:who,label:'Carte tactique'});
- addLog(`${player(who).name} joue une carte tactique en ${battle.target}.`);
- battle.seconds=10;renderBattle();
+ const id=G.players[who].hand[handIndex];
+ if(id===undefined || !isTactical(id))return;
+ G.players[who].hand.splice(handIndex,1);
+ battle.stack.push({owner:who,cardId:id,label:cardDef(id).name});
+ addLog(`${player(who).name} joue ${cardDef(id).name} en ${battle.target}.`);
+ battle.seconds=10;renderBattle();render();
 }
 function resolveSeaBattle(){
  clearInterval(battleTimerId);
@@ -261,7 +296,7 @@ function resolveSeaBattle(){
    G.sea[target].fleets[defender]=surv;
    addLog(`Défense victorieuse en ${target} : ${d} contre ${a}, ${surv} unité(s) défenseure(s) survivent.`);
  }
- usedDest.add(target);battle=null;hideBattle();updateProvincePV();checkVictory();render();
+ battle.stack.forEach(c=>G.discard.push(c.cardId));usedDest.add(target);battle=null;hideBattle();updateProvincePV();checkVictory();render();
 }
 function showBattle(){el('battleOverlay').classList.remove('hidden')}
 function hideBattle(){el('battleOverlay').classList.add('hidden');clearInterval(battleTimerId)}
@@ -272,13 +307,20 @@ function renderBattle(){
  const side=battle.side==='defender'?battle.defender:battle.attacker;
  el('battleBody').innerHTML=`<div class="battle-line"><b>Attaquant</b><span>${player(battle.attacker).name} — ${battle.attackUnits}</span></div>
  <div class="battle-line"><b>Défenseur</b><span>${player(battle.defender).name} — ${battle.defUnits}</span></div>
- <p>Fenêtre tactique de <b>${player(side).name}</b>. Les cartes sont empilées ; la dernière jouée sera la première à être résolue quand leurs effets seront branchés.</p>`;
+ <p>Fenêtre tactique de <b>${player(side).name}</b>. Choisissez une vraie carte Tactique de la main. La pile suit l’ordre dernière jouée → première résolue ; les effets détaillés seront automatisés progressivement.</p>`;
  el('battleTimer').textContent=battle.seconds+' s';
- el('battleStack').innerHTML=battle.stack.length?'<b>Pile tactique (dernière en haut)</b>'+battle.stack.slice().reverse().map(c=>`<div class="stack-card">${player(c.owner).name} — ${c.label}</div>`).join(''):'';
+ el('battleStack').innerHTML=battle.stack.length?'<b>Pile tactique (dernière en haut)</b>'+battle.stack.slice().reverse().map(c=>`<div class="stack-card">${player(c.owner).name} — ${cardDef(c.cardId).name}</div>`).join(''):'';
  const actions=el('battleActions');actions.innerHTML='';
- const card=document.createElement('button');card.textContent=`Jouer une carte (${player(side).cards})`;card.disabled=player(side).cards<=0;card.onclick=playTestTactical;
+ const tacticalIndexes=G.players[side].hand.map((id,idx)=>({id,idx})).filter(x=>isTactical(x.id));
+ tacticalIndexes.forEach(x=>{
+   const b=document.createElement('button');
+   b.textContent=cardDef(x.id).name;
+   b.title=cardDef(x.id).effect;
+   b.onclick=()=>playTacticalFromHand(x.idx);
+   actions.appendChild(b);
+ });
  const pass=document.createElement('button');pass.textContent='Passer';pass.onclick=passTactical;
- actions.append(card,pass);
+ actions.appendChild(pass);
 }
 function updateProvincePV(){
  for(let i=0;i<G.players.length;i++){
@@ -294,7 +336,7 @@ function checkVictory(){if(pv()>=3)addLog(`${player().name} atteint ${pv()} PV :
 function beginPlay(){
  G.phase='play';setMovableAll();dest=null;picks={};render();
 }
-function drawPhase(){if(G.phase!=='start')return;player().cards+=2;addLog(`${player().name} pioche 2 cartes Tribu.`);beginPlay()}
+function drawPhase(){if(G.phase!=='start')return;drawCards(G.active,2);addLog(`${player().name} pioche 2 cartes Tribu.`);beginPlay()}
 function harvestPhase(){
  if(G.phase!=='start')return;const gain=2*regionsOwned();player().gold+=gain;addLog(`${player().name} récolte ${gain} Or.`);
  greedCheck();beginPlay();
@@ -320,10 +362,11 @@ function greedCheck(){
 function destroyRegion(r){
  const c=G.b[r];c.units=0;c.owner=null;c.hostile=c.originalHostile;
 }
-function buyCard(){if(player().gold<5){addLog('Il faut 5 Or pour acheter une carte.');render();return}player().gold-=5;player().cards++;addLog(`${player().name} achète une carte Tribu pour 5 Or.`);render()}
-function activateMount(){
- if(G.phase!=='play')return;if(moveCycle===2){addLog('Montures a déjà ouvert le second cycle de déplacement.');render();return}
- moveCycle=2;setMovableAll();usedDest=new Set();dest=null;picks={};addLog('Montures : second cycle de déplacement. Les régions déjà attaquées restent verrouillées.');render();
+function buyCard(){
+ if(player().gold<5){addLog('Il faut 5 Or pour acheter une carte.');render();return}
+ player().gold-=5;const id=drawCard(G.active);
+ if(id!==null)addLog(`${player().name} achète ${cardDef(id).name} pour 5 Or.`);
+ render()
 }
 function startOracle(){
  if(G.phase!=='play')return;G.phase='oracleMove';dest=null;picks={};oracleMoved=false;render();
@@ -418,7 +461,7 @@ function render(){
  }
  addFloatingMoveActions();
  const p=player(),f=FACTIONS[p.faction];
- el('status').innerHTML=`<b><span class="playerDot" style="background:${COLORS[G.active]}"></span> ${p.name}</b><br>${f.name}<div><span class="badge">Tour ${G.turn}</span><span class="badge">Phase ${G.phase}</span><span class="badge">Or ${p.gold}</span><span class="badge">Cartes ${p.cards}</span><span class="badge">PV ${pv()}</span><span class="badge">Unités ${totalUnits()}/${cap()}</span></div>`;
+ el('status').innerHTML=`<b><span class="playerDot" style="background:${COLORS[G.active]}"></span> ${p.name}</b><br>${f.name}<div><span class="badge">Tour ${G.turn}</span><span class="badge">Phase ${G.phase}</span><span class="badge">Or ${p.gold}</span><span class="badge">Cartes ${p.hand.length}</span><span class="badge">PV ${pv()}</span><span class="badge">Unités ${totalUnits()}/${cap()}</span></div>`;
  el('startSection').classList.toggle('hidden',G.phase!=='start');
  el('recruitSection').classList.toggle('hidden',G.phase!=='recruit');
  el('playSection').classList.toggle('hidden',G.phase!=='play');
@@ -438,6 +481,17 @@ function render(){
  el('ok').disabled=!dest||!Object.values(picks).some(Boolean);
  el('cancel').disabled=!dest;
  el('buyCard').disabled=p.gold<5;
+ 
+ const handEl=el('hand');handEl.innerHTML='';el('handCount').textContent=p.hand.length+' carte(s)';
+ p.hand.forEach((id,idx)=>{
+   const c=cardDef(id),d=document.createElement('div');d.className='carditem';
+   d.innerHTML=`<b>${c.name}</b><small>${c.type}</small><small>${c.effect}</small>`;
+   if(G.phase==='play' && !c.type.startsWith('Tactique')){
+     const b=document.createElement('button');b.textContent='Jouer (effet non automatisé)';b.disabled=true;d.appendChild(b);
+   }
+   handEl.appendChild(d);
+ });
+
  el('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
 }
 el('drawBtn').onclick=drawPhase;
