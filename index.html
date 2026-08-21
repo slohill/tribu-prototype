@@ -97,7 +97,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — timing cartes + visuels v3</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — chaîne Embuscade corrigée</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -215,14 +215,26 @@ function embuscadeIndex(i){
 function eligibleAmbushers(receiver){
  return G.players.map((pl,i)=>i).filter(i=>i!==receiver&&embuscadeIndex(i)>=0);
 }
-function clearGoldReactionTimer(){if(goldReactionTick){clearInterval(goldReactionTick);goldReactionTick=null}}
+function clearGoldReactionTimer(){
+ if(goldReactionTick){clearInterval(goldReactionTick);goldReactionTick=null}
+}
+function startGoldReactionTimer(){
+ clearGoldReactionTimer();
+ if(!goldReaction)return;
+ goldReactionTick=setInterval(()=>{
+   if(!goldReaction){clearGoldReactionTimer();return}
+   goldReaction.seconds--;
+   if(goldReaction.seconds<=0){resolveGoldGain();return}
+   render();
+ },1000);
+}
 function resolveGoldGain(){
  if(!goldReaction)return;
  clearGoldReactionTimer();
  const r=goldReaction;
  goldReaction=null;
  G.players[r.receiver].gold+=r.amount;
- log(p(r.receiver).name+' reçoit '+r.amount+' Or'+(r.source?' ('+r.source+')':'')+'.');
+ log(p(r.receiver).name+' reçoit finalement '+r.amount+' Or'+(r.source?' ('+r.source+')':'')+'.');
  if(r.after==='beginPlay')beginPlay();else render();
  queueBot('après gain or');
 }
@@ -230,11 +242,26 @@ function playAmbush(playerIndex){
  if(!goldReaction||playerIndex===goldReaction.receiver)return;
  const idx=embuscadeIndex(playerIndex);if(idx<0)return;
  clearGoldReactionTimer();
- const r=goldReaction;
- const previous=r.receiver;
+ const r=goldReaction,previous=r.receiver;
  const id=G.players[playerIndex].hand.splice(idx,1)[0];G.discard.push(id);
- goldReaction={receiver:playerIndex,amount:r.amount,source:'Embuscade sur '+r.source,after:r.after,seconds:15};
- log(p(playerIndex).name+' joue Embuscade sur '+p(previous).name+' : '+r.amount+' Or sont maintenant destinés à '+p(playerIndex).name+'. Nouvelle fenêtre de 15 secondes.');
+ goldReaction={
+   receiver:playerIndex,
+   amount:r.amount,
+   source:'Embuscade sur '+r.source,
+   after:r.after,
+   seconds:15
+ };
+ log(p(playerIndex).name+' joue Embuscade sur '+p(previous).name+' : '+r.amount+' Or sont maintenant destinés à '+p(playerIndex).name+'.');
+
+ const counters=eligibleAmbushers(playerIndex);
+ if(!counters.length){
+   log('Aucune autre Embuscade possible : le gain est résolu immédiatement.');
+   resolveGoldGain();
+   return;
+ }
+
+ log('Nouvelle fenêtre de réaction : 15 secondes.');
+ startGoldReactionTimer();
  render();
  maybeBotAmbush();
 }
@@ -258,13 +285,7 @@ function offerGoldGain(receiver,amount,source,after){
  }
  goldReaction={receiver,amount,source,after,seconds:15};
  log(p(receiver).name+' doit recevoir '+amount+' Or : fenêtre Embuscade de 15 secondes.');
- clearGoldReactionTimer();
- goldReactionTick=setInterval(()=>{
-   if(!goldReaction){clearGoldReactionTimer();return}
-   goldReaction.seconds--;
-   if(goldReaction.seconds<=0){resolveGoldGain();return}
-   render();
- },1000);
+ startGoldReactionTimer();
  render();
  maybeBotAmbush();
 }
