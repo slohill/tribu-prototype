@@ -70,8 +70,19 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .sourcePickBadge{position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);background:#111d;color:#fff;border-radius:5px;padding:2px 5px;font-size:10px;font-weight:800;white-space:nowrap;z-index:34;pointer-events:none}
 .spot.srcHold{cursor:pointer}
 
-#map,#map *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-#map img{user-drag:none;-webkit-user-drag:none}
+#map,#map *{
+ -webkit-user-select:none!important;
+ user-select:none!important;
+ -webkit-touch-callout:none!important;
+ -webkit-user-drag:none!important;
+ touch-action:manipulation;
+}
+#map img,#map button,#map span{
+ -webkit-user-select:none!important;
+ user-select:none!important;
+ -webkit-touch-callout:none!important;
+ -webkit-user-drag:none!important;
+}
 .goldReactionBox{border:2px solid #d7b84b;background:#332f18;border-radius:8px;padding:8px;margin-top:7px;text-align:center}
 .goldReactionBox.hidden{display:none}.goldReactionBox button{margin:4px;padding:5px 8px}
 </style></head>
@@ -85,7 +96,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Embuscade + réactions Or</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Embuscade + correctif tablette</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -162,6 +173,15 @@ const COLORS=['#ff4fc3','#ffd92f','#91e87c'];
 const FACTIONS=[{name:'Griffes-Blanches',cap:3,def:1},{name:'Reptones',cap:3,def:1},{name:'Yonkaïs',cap:2,def:3}];
 let G=null,dest=null,picks={},movable={},usedDest=new Set(),attacked=new Set(),cycle=1,battle=null,battleTick=null,botTimer=null,botToken=0,botReactionTimer=null,buildingMode=null,choiceState=null,paidDrawState=null,paidDrawTick=null,goldReaction=null,goldReactionTick=null;
 const $=id=>document.getElementById(id),map=$('map'),isSea=id=>!!SEA[id];
+
+// Tablette/mobile : empêcher la sélection native du navigateur sur la carte.
+['contextmenu','selectstart','dragstart'].forEach(evt=>{
+ map.addEventListener(evt,e=>e.preventDefault());
+});
+map.addEventListener('touchstart',e=>{
+ if(e.target.closest('.spot,.die,.buildingIcon,.dragon,.sourceMinus'))e.preventDefault();
+},{passive:false});
+
 function makeDeck(){const d=[];CARDS.forEach((c,i)=>{for(let n=0;n<c.count;n++)d.push(i)});for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
 function draw(i,n=1){for(let k=0;k<n;k++){if(!G.deck.length)break;G.players[i].hand.push(G.deck.pop())}}
 function init(){
@@ -1097,6 +1117,7 @@ function renderMap(){
  if(G.phase==='play'&&dest&&legalSources(dest).includes(id)){
    b.onpointerdown=e=>{
      if(e.target!==b)return;
+     e.preventDefault();
      longTriggered=false;
      holdTimer=setTimeout(()=>{longTriggered=true;pickAllFromSource(id)},480);
    };
