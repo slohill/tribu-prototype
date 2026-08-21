@@ -49,7 +49,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center"><label>Mode : <select id="gameMode"><option value="1bot">1 joueur + 2 bots</option><option value="2bot">2 joueurs + 1 bot</option><option value="human">3 joueurs humains</option></select></label></div><button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — mode test contre bots</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — mode bots corrigé</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -534,7 +534,7 @@ function resolveBattle(){
  }
  finishBattleCards();
  usedDest.add(target);
- hideBattle();battle=null;render();
+ hideBattle();battle=null;render();scheduleBot();
 }
 function beginPlay(){G.phase='play';setMovable();render()}
 function doDraw(){draw(G.active,2);log(p().name+' pioche 2 cartes.');beginPlay()}
@@ -706,7 +706,13 @@ function botStep(){
    G.phase='oracleMove';render();scheduleBot();return;
  }
  if(G.phase==='oracleMove'){
-   const ts=dragonTargets();if(ts.length)G.dragon=ts[Math.floor(Math.random()*ts.length)];
+   const ts=dragonTargets();
+   if(ts.length){
+     G.dragon=ts[Math.floor(Math.random()*ts.length)];
+     log(p().name+' déplace automatiquement le Dragon vers '+G.dragon+'.');
+   }else{
+     log('Aucune destination légale trouvée pour le Dragon — passage forcé au lancer Oracle.');
+   }
    G.phase='oracleRoll';render();scheduleBot();return;
  }
  if(G.phase==='oracleRoll'){roll();scheduleBot();return}
@@ -726,8 +732,12 @@ function botBattleReaction(){
 
 function render(){
  if(!G)return;renderMap();renderPlayerRail();const pl=p(),f=FACTIONS[pl.faction];
- $('status').innerHTML='<b><span class="dot" style="background:'+COLORS[G.active]+'"></span> '+pl.name+(pl.bot?' 🤖':'')+'</b><br>'+f.name+'<div><span class="badge">Tour '+G.turn+'</span><span class="badge">Or '+pl.gold+'</span><span class="badge">Unités '+totalUnits()+'/'+cap()+'</span><span class="badge">Cartes '+pl.hand.length+'</span></div>';
- $('startTurn').classList.toggle('hidden',G.phase!=='start');['draw','harvest','recruit'].forEach(id=>$(id).disabled=isBot());$('recruitBox').classList.toggle('hidden',G.phase!=='recruit');$('playBox').classList.toggle('hidden',G.phase!=='play');$('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));$('roll').disabled=G.phase!=='oracleRoll';
+ const botState=pl.bot?'<div class="note" style="margin-top:7px">🤖 Le bot joue automatiquement…</div>':'';
+ $('status').innerHTML='<b><span class="dot" style="background:'+COLORS[G.active]+'"></span> '+pl.name+(pl.bot?' 🤖':'')+'</b><br>'+f.name+'<div><span class="badge">Tour '+G.turn+'</span><span class="badge">Or '+pl.gold+'</span><span class="badge">Unités '+totalUnits()+'/'+cap()+'</span><span class="badge">Cartes '+pl.hand.length+'</span></div>'+botState;
+ $('startTurn').classList.toggle('hidden',G.phase!=='start');['draw','harvest','recruit'].forEach(id=>$(id).disabled=isBot());
+ $('mount').disabled=isBot();
+ $('toOracle').disabled=isBot();
+ $('roll').disabled=(G.phase!=='oracleRoll')||isBot();$('recruitBox').classList.toggle('hidden',G.phase!=='recruit');$('playBox').classList.toggle('hidden',G.phase!=='play');$('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));
  if(G.phase==='oracleMove')$('oracleHint').textContent='Cliquez sur une case violette pour déplacer obligatoirement le Dragon.';if(G.phase==='oracleRoll')$('oracleHint').textContent='Dragon placé sur '+G.dragon+'. Lancez le dé.';
  const src=$('sources');src.innerHTML='';if(G.phase==='play'&&dest){$('hint').innerHTML='Destination <b>'+dest+'</b> — cliquez sur plusieurs sources jaunes si besoin.';legalSources(dest).forEach(s=>{const d=document.createElement('div');d.className='source';d.innerHTML='<button>'+s+'</button><button>−</button><span>'+(picks[s]||0)+'/'+movableCount(s)+'</span><button>+</button>';const bs=d.querySelectorAll('button');bs[0].onclick=()=>adjust(s,1);bs[1].onclick=()=>adjust(s,-1);bs[2].onclick=()=>adjust(s,1);src.appendChild(d)})}else if(G.phase==='play')$('hint').textContent='Cliquez sur la destination.';
  $('harvestPanel').classList.toggle('hidden',!harvestReaction);
@@ -756,6 +766,7 @@ function render(){
  renderInPlay(G.active);
  if(battle && battle.kind!=='seaChoice')renderBattle();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
+ if(isBot() && !battle && !harvestReaction) scheduleBot();
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
 $('restart').onclick=init;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('endRecruit').onclick=beginPlay;$('mount').onclick=mount;$('toOracle').onclick=toOracle;$('roll').onclick=roll;
