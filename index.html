@@ -50,7 +50,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .turnPanel{background:#19201d;border-radius:9px;padding:10px;margin-top:10px}.turnGrid{display:grid;grid-template-columns:1fr;gap:10px}.rightHeader{border:3px solid #777;border-radius:9px;padding:7px;margin-bottom:7px}.rightStats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px}.statBox{background:#26302b;border-radius:6px;padding:4px;text-align:center}.statBox b{display:block;font-size:13px}.rightSection{border-top:1px solid #46514c;margin-top:10px;padding-top:10px}
 @media(max-width:1050px){.turnGrid{grid-template-columns:1fr}}
 
-.buildingIcon{position:absolute;width:11px;height:17px;object-fit:contain;left:18px;top:-8px;filter:drop-shadow(0 2px 2px #000);z-index:18;pointer-events:none}
+.buildingIcon{position:absolute;width:8px;height:13px;object-fit:contain;left:18px;top:-8px;filter:drop-shadow(0 2px 2px #000);z-index:18;pointer-events:none}
 .spot.buildTarget{outline:5px solid #46e37a;background:#46e37a44;animation:buildPulse .75s ease-in-out infinite alternate}
 @keyframes buildPulse{from{box-shadow:0 0 0 2px #46e37a88}to{box-shadow:0 0 0 8px #46e37a22}}
 .buildModeBox{background:#20372a;border:2px solid #46e37a;border-radius:8px;padding:8px;margin:7px 0}
@@ -86,7 +86,12 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .goldReactionBox{border:2px solid #d7b84b;background:#332f18;border-radius:8px;padding:8px;margin-top:7px;text-align:center}
 .goldReactionBox.hidden{display:none}.goldReactionBox button{margin:4px;padding:5px 8px}
 .portalIcon{position:absolute;width:24px;height:31px;object-fit:contain;left:50%;top:50%;transform:translate(-50%,-50%);z-index:21;filter:drop-shadow(0 1px 2px #000);pointer-events:none}
-.portalIcon.withUnits{left:calc(50% + 23px);top:50%;transform:translate(-50%,-50%)}</style></head>
+.portalIcon.withUnits{left:calc(50% + 23px);top:50%;transform:translate(-50%,-50%)}
+.handHeaderRow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.handHeaderRow .handOwner{flex:0 1 auto}
+.handBuyDraw{width:auto!important;padding:5px 9px!important;font-size:11px!important;font-weight:900!important;border:2px solid #46e37a!important;background:#183a24!important;color:#eaffef!important;border-radius:7px;box-shadow:0 0 8px #46e37a55}
+.handBuyDraw:disabled{opacity:.35;box-shadow:none}
+</style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
 <label>Mode :
@@ -97,7 +102,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — chaîne Embuscade corrigée</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — consolidation v4</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -109,7 +114,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
   <div class="bottomZone">
     <div class="bottomPanel">
-      <div id="handOwner" class="handOwner">MAIN</div>
+      <div class="handHeaderRow"><div id="handOwner" class="handOwner">MAIN</div><button id="buyDraw" class="handBuyDraw">🃏 5 Or : une carte</button></div>
       <h3>Main — <span id="handCount">0</span> carte(s)</h3>
       <div id="hand" class="handHorizontal"></div>
     </div>
@@ -124,11 +129,9 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
 <aside class="rightRail">
   <div id="status"></div>
-  <div id="globalActions" class="rightHeader" style="margin-top:8px">
-    <b>Actions disponibles à tout moment</b>
-    <div class="row" style="margin-top:7px"><button id="buyDraw">🃏 5 Or : piocher</button></div>
-    <div id="paidDrawWindow" class="note hidden" style="margin-top:7px"></div><div id="goldReactionBox" class="goldReactionBox hidden"></div>
-  </div>
+  <div id="globalActions" style="display:none"><b></b></div>
+  <div id="paidDrawWindow" class="note hidden" style="margin-top:7px"></div>
+  <div id="goldReactionBox" class="goldReactionBox hidden"></div>
 
   <div class="rightSection">
     <b>Tour de jeu</b>
@@ -249,18 +252,11 @@ function playAmbush(playerIndex){
    amount:r.amount,
    source:'Embuscade sur '+r.source,
    after:r.after,
-   seconds:15
+   seconds:10
  };
  log(p(playerIndex).name+' joue Embuscade sur '+p(previous).name+' : '+r.amount+' Or sont maintenant destinés à '+p(playerIndex).name+'.');
 
- const counters=eligibleAmbushers(playerIndex);
- if(!counters.length){
-   log('Aucune autre Embuscade possible : le gain est résolu immédiatement.');
-   resolveGoldGain();
-   return;
- }
-
- log('Nouvelle fenêtre de réaction : 15 secondes.');
+ log('Nouvelle fenêtre de réaction : 10 secondes.');
  startGoldReactionTimer();
  render();
  maybeBotAmbush();
@@ -276,15 +272,8 @@ function maybeBotAmbush(){
 }
 function offerGoldGain(receiver,amount,source,after){
  if(amount<=0){if(after==='beginPlay')beginPlay();else render();return}
- const opponents=eligibleAmbushers(receiver);
- if(!opponents.length){
-   G.players[receiver].gold+=amount;
-   log(p(receiver).name+' reçoit '+amount+' Or'+(source?' ('+source+')':'')+'.');
-   if(after==='beginPlay')beginPlay();else render();
-   return;
- }
- goldReaction={receiver,amount,source,after,seconds:15};
- log(p(receiver).name+' doit recevoir '+amount+' Or : fenêtre Embuscade de 15 secondes.');
+ goldReaction={receiver,amount,source,after,seconds:10};
+ log(p(receiver).name+' doit recevoir '+amount+' Or : fenêtre de réaction de 10 secondes.');
  startGoldReactionTimer();
  render();
  maybeBotAmbush();
@@ -304,7 +293,7 @@ function spendDraw(){
  if(isBot()||p().gold<5||battle||choiceState||paidDrawState||goldReaction)return;
  p().gold-=5;
  draw(G.active,1);
- paidDrawState={player:G.active,seconds:15,phase:G.phase};
+ paidDrawState={player:G.active,seconds:10,phase:G.phase};
  log(p().name+' dépense 5 Or, pioche 1 carte et dispose de 15 secondes pour la consulter ou jouer une carte.');
  clearInterval(paidDrawTick);
  paidDrawTick=setInterval(()=>{
@@ -1135,7 +1124,7 @@ function die(owner,count,region=null){
  const d=document.createElement('span');d.className='die';d.style.background=COLORS[owner];
  const defending=region!==null&&owner!==G.active;
  const y=FACTIONS[G.players[owner].faction].name==='Yonkaïs'&&defending;
- const walls=region!==null?wallCount(owner):0;
+ const walls=(region!==null&&owner!==G.active)?wallCount(owner):0;
  const shown=(y?count*3:count)+walls;
  d.textContent=shown;
  d.title=(region!==null?'Valeur sur région : ':'Unités : ')+shown+(walls?' (Murs frontaliers +'+walls+')':'');
