@@ -85,7 +85,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 }
 .goldReactionBox{border:2px solid #d7b84b;background:#332f18;border-radius:8px;padding:8px;margin-top:7px;text-align:center}
 .goldReactionBox.hidden{display:none}.goldReactionBox button{margin:4px;padding:5px 8px}
-</style></head>
+.portalIcon{position:absolute;left:18px;top:-7px;font-size:18px;line-height:18px;z-index:21;filter:drop-shadow(0 1px 2px #000);pointer-events:none}</style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
 <label>Mode :
@@ -96,7 +96,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Embuscade + correctif tablette</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Murs frontaliers + Portails</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -171,17 +171,13 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 const DATA={"POS":{"A1":[9.46,28.86],"A2":[9.26,39.04],"A3":[14.84,43.36],"A4":[18.03,47.96],"A5":[13.15,59.53],"B1":[9.46,66.37],"B2":[16.14,68.32],"B3":[8.96,83.79],"B4":[13.94,81.7],"B5":[23.41,87.28],"C1":[26.1,23.84],"C2":[25.9,34.02],"C3":[26.79,44.62],"C4":[33.96,29.56],"C5":[41.33,35.97],"D1":[51.89,37.37],"D2":[59.76,31.79],"D3":[70.42,29.42],"D4":[64.94,38.34],"D5":[57.97,44.34],"E1":[35.46,46.71],"E2":[47.41,45.45],"E3":[55.28,53.12],"E4":[43.13,54.52],"E5":[50.7,61.9],"F1":[28.19,56.61],"F2":[36.25,60.79],"F3":[34.06,69.02],"F4":[43.23,69.57],"F5":[50.9,71.66],"G1":[64.84,52.28],"G2":[64.14,62.04],"G3":[60.66,73.06],"G4":[69.72,70.69],"G5":[67.63,82.26],"H1":[84.26,23.84],"H2":[88.45,28.16],"H3":[83.07,35.0],"H4":[81.57,46.57],"H5":[86.85,42.52],"I1":[82.17,55.21],"I2":[89.14,56.19],"I3":[82.57,64.83],"I4":[89.04,67.48],"I5":[85.76,77.1],"U":[16.24,17.01],"V":[29.88,79.61],"W":[48.8,24.12],"X":[73.41,49.36],"Y":[95.22,37.23],"Z":[77.79,87.42]},"R":{"A1":["A","e",0,["A2"],["U"]],"A2":["A","e",0,["A1"],[]],"A3":["A","e",0,["A4"],["U"]],"A4":["A","e",0,["A3"],[]],"A5":["A","e",1,["B1","B2"],["U"]],"B1":["B","e",0,["A5","B2"],[]],"B2":["B","e",0,["A5","B1"],["V"]],"B3":["B","t",1,["B4"],[]],"B4":["B","t",0,["B3"],["V"]],"B5":["B","t",0,[],["V"]],"C1":["C","e",0,["C2","C4"],["U"]],"C2":["C","e",0,["C1","C3","C4"],[]],"C3":["C","e",1,["C2","C4","E1","F1"],[]],"C4":["C","t",0,["C1","C2","C3","C5","E1"],[]],"C5":["C","t",0,["C4","E1","E2","D1"],["W"]],"D1":["D","t",0,["C5","E2","D2","D5"],["W"]],"D2":["D","t",0,["D1","D3","D4","D5"],[]],"D3":["D","t",0,["D2","D4"],[]],"D4":["D","t",0,["D2","D3","D5","G1"],["X"]],"D5":["D","t",1,["D1","D2","D4","E2","E3","G1"],[]],"E1":["E","t",0,["C3","C4","C5","E2","E4","F1","F2"],[]],"E2":["E","t",0,["E1","E3","E4","C5","D1","D5"],[]],"E3":["E","t",0,["E2","E4","E5","D5","G1","G2"],[]],"E4":["E","t",1,["E1","E2","E3","E5","F2","F4"],[]],"E5":["E","t",0,["E3","E4","F4","F5","G2","G3"],[]],"F1":["F","t",0,["C3","E1","F2","F3"],["V"]],"F2":["F","t",0,["E1","E4","F1","F3","F4"],[]],"F3":["F","t",1,["F1","F2","F4"],[]],"F4":["F","t",0,["F2","F3","F5","E4","E5"],[]],"F5":["F","t",0,["E5","F4","G3"],["V"]],"G1":["G","t",0,["D4","D5","E3","G2"],["X"]],"G2":["G","d",1,["G1","G3","G4","E3","E5"],[]],"G3":["G","d",0,["G2","G4","G5","F5","E5"],[]],"G4":["G","d",0,["G2","G3","G5"],[]],"G5":["G","d",0,["G3","G4"],["Z"]],"H1":["H","t",0,["H2","H3"],[]],"H2":["H","t",0,["H1","H3","H5"],[]],"H3":["H","t",1,["H1","H2","H4","H5"],[]],"H4":["H","t",0,["H3","H5","I1"],["X"]],"H5":["H","d",0,["H2","H3","H4","I1","I2"],["Y"]],"I1":["I","d",0,["H4","H5","I2","I3"],[]],"I2":["I","d",0,["H5","I1","I3","I4"],["Y"]],"I3":["I","d",0,["I1","I2","I4","I5"],[]],"I4":["I","d",0,["I2","I3","I5"],[]],"I5":["I","d",1,["I3","I4"],["Z"]]},"SEA":{"U":["W","V"],"V":["U","Z"],"W":["U","X","Y"],"X":["W","Z","Y"],"Y":["W","X","Z"],"Z":["V","X","Y"]},"PORTS":{"U":["A1","A3","A5","C1"],"V":["B2","B4","B5","F1","F5"],"W":["C5","D1"],"X":["D4","G1","H4"],"Y":["H5","I2"],"Z":["G5","I5"]},"cards":[{"name":"Assassin","count":4,"type":"Tactique","effect":"Lancez un dé. Sur 4, 5 ou 6, éliminez l’Agent ou le Héros ciblé. Sur 1, 2 ou 3, l’effet échoue."},{"name":"Balistes","count":4,"type":"Tactique","effect":"+2 d’Attaque sur toutes vos attaques jusqu’à la fin du tour, ou +2 de Défense sur toutes vos défenses jusqu’à la fin du tour du joueur actif."},{"name":"Caravane de commerce","count":2,"type":"Tactique","effect":"Révélez autant de cartes Tribu qu’il y a de joueurs. Chacun choisit une carte dans le sens horaire."},{"name":"Catapultes","count":3,"type":"Tactique","effect":"+5 d’Attaque ou de Défense durant une bataille."},{"name":"Conseil de guerre","count":3,"type":"Tactique","effect":"Piochez 2 cartes puis défaussez 2 cartes."},{"name":"Egnobombe","count":1,"type":"Tactique","effect":"Sacrifiez toutes vos unités d’une région terrestre contenant au moins 5 soldats ; détruisez les unités des cases adjacentes et mers reliées."},{"name":"Divination de l’Oracle","count":2,"type":"Tactique","effect":"Activez l’Oracle visible ou choisissez une carte Oracle à placer au-dessus de la pile après mélange."},{"name":"Embuscade","count":3,"type":"Tactique","effect":"Prenez l’Or qu’un adversaire devait gagner par une Récolte ou une carte Tribu."},{"name":"Espion","count":4,"type":"Permanent — Agent","effect":"Une fois par tour pendant votre Phase de Jeu, regardez une carte au hasard dans la main d’un adversaire."},{"name":"Forteresse","count":3,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une de vos régions ; peut changer de propriétaire."},{"name":"Icenia, la cité blanche","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région enneigée, +5 Or à la Récolte, immunité locale à Givre mortel."},{"name":"Mur de pique","count":4,"type":"Tactique","effect":"+4 de Défense sur une bataille."},{"name":"Montures","count":2,"type":"Tactique","effect":"Au choix : nouveau point de déplacement pour toutes vos unités jusqu’à la fin du tour, ou +4 Attaque sur une bataille."},{"name":"Murs frontaliers","count":3,"type":"Permanent — Bâtiment","effect":"Toutes vos régions gagnent +1 Défense ; cumulable."},{"name":"Pluie de flèches","count":4,"type":"Tactique","effect":"+3 d’Attaque ou de Défense sur une bataille."},{"name":"Sundo, cité du soleil","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région désertique, +5 Or à la Récolte, immunité locale à Tempête de sable."},{"name":"Taxe","count":4,"type":"Tactique","effect":"+1 Or pour chaque case où vous avez des unités."},{"name":"Voleur","count":3,"type":"Permanent — Agent","effect":"Une fois par tour, tentez de voler une carte ; sur 1 le Voleur est défaussé. Peut exploiter une carte vue par un Espion."},{"name":"Section de l’ombre","count":1,"type":"Tactique","effect":"Jusqu’à 6 unités peuvent conquérir une case de votre choix ou défendre une case attaquée, même hors de votre tour."},{"name":"Plan des trébuchets","count":2,"type":"Permanent — Objet","effect":"Bonus contre Murs frontaliers, Forteresses et Cités ; destruction des bâtiments si victoire ; non cumulable."},{"name":"Portails","count":1,"type":"Permanent — Bâtiment","effect":"Deux régions terrestres deviennent adjacentes. Portails inaltérables et inutilisables par le Dragon."},{"name":"Pyrodontes de guerre","count":3,"type":"Tactique","effect":"+5 d’Attaque sur une bataille en région tempérée ; effet perdu si le climat change avant résolution."}]},POS=DATA.POS,R=DATA.R,SEA=DATA.SEA,PORTS=DATA.PORTS,CARDS=DATA.cards;
 const COLORS=['#ff4fc3','#ffd92f','#91e87c'];
 const FACTIONS=[{name:'Griffes-Blanches',cap:3,def:1},{name:'Reptones',cap:3,def:1},{name:'Yonkaïs',cap:2,def:3}];
-let G=null,dest=null,picks={},movable={},usedDest=new Set(),attacked=new Set(),cycle=1,battle=null,battleTick=null,botTimer=null,botToken=0,botReactionTimer=null,buildingMode=null,choiceState=null,paidDrawState=null,paidDrawTick=null,goldReaction=null,goldReactionTick=null;
+let G=null,dest=null,picks={},movable={},usedDest=new Set(),attacked=new Set(),cycle=1,battle=null,battleTick=null,botTimer=null,botToken=0,botReactionTimer=null,buildingMode=null,portalMode=null,choiceState=null,paidDrawState=null,paidDrawTick=null,goldReaction=null,goldReactionTick=null;
 const $=id=>document.getElementById(id),map=$('map'),isSea=id=>!!SEA[id];
 
 // Tablette/mobile : empêcher la sélection native du navigateur sur la carte.
 ['contextmenu','selectstart','dragstart'].forEach(evt=>{
  map.addEventListener(evt,e=>e.preventDefault());
 });
-map.addEventListener('touchstart',e=>{
- if(e.target.closest('.spot,.die,.buildingIcon,.dragon,.sourceMinus'))e.preventDefault();
-},{passive:false});
-
 function makeDeck(){const d=[];CARDS.forEach((c,i)=>{for(let n=0;n<c.count;n++)d.push(i)});for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
 function draw(i,n=1){for(let k=0;k<n;k++){if(!G.deck.length)break;G.players[i].hand.push(G.deck.pop())}}
 function init(){
@@ -318,6 +314,28 @@ function confirmCouncil(){
  render();
 }
 function cardIndexByName(name){return CARDS.findIndex(c=>c.name===name)}
+function wallCount(i){const id=cardIndexByName('Murs frontaliers');return id<0?0:G.players[i].inPlay.filter(x=>x===id).length}
+function portalMate(r){const b=G.b[r]&&G.b[r].building;return b&&b.type==='Portail'?b.pair:null}
+function portalRegions(){return Object.keys(G.b).filter(r=>G.b[r].building&&G.b[r].building.type==='Portail')}
+function beginWalls(handIndex){
+ if(isBot())return;const id=p().hand[handIndex];if(id===undefined||CARDS[id].name!=='Murs frontaliers')return;
+ p().hand.splice(handIndex,1);p().inPlay.push(id);
+ log(p().name+' pose Murs frontaliers : bonus global de Défense désormais +'+wallCount(G.active)+'.');render();
+}
+function beginPortals(handIndex){
+ if(isBot()||portalMode||buildingMode)return;const id=p().hand[handIndex];if(id===undefined||CARDS[id].name!=='Portails')return;
+ portalMode={cardId:id,first:null};dest=null;picks={};log('Portails : choisissez une première région terrestre sans bâtiment.');render();
+}
+function canPortalRegion(r){return portalMode&&!isSea(r)&&!hasBuilding(r)&&portalMode.first!==r}
+function choosePortalRegion(r){
+ if(!canPortalRegion(r))return;
+ if(!portalMode.first){portalMode.first=r;log('Premier Portail : '+r+'. Choisissez la seconde région.');render();return}
+ const a=portalMode.first,b=r,id=portalMode.cardId,idx=p().hand.indexOf(id);if(idx<0){portalMode=null;render();return}
+ p().hand.splice(idx,1);p().inPlay.push(id);
+ G.b[a].building={type:'Portail',cardId:id,owner:G.active,pair:b};G.b[b].building={type:'Portail',cardId:id,owner:G.active,pair:a};
+ portalMode=null;log(p().name+' pose les Portails : '+a+' ↔ '+b+'. Ces régions sont maintenant adjacentes pour les unités.');render();
+}
+
 function hasBuilding(r){return !!G.b[r].building}
 function fortressAt(r){return G.b[r] && G.b[r].building && G.b[r].building.type==='Forteresse' ? G.b[r].building : null}
 function cityAt(r){
@@ -325,8 +343,10 @@ function cityAt(r){
  return b&&['Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?b:null;
 }
 function buildingDefense(r){
- const b=G.b[r]&&G.b[r].building;
- return b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?10:0;
+ const cell=G.b[r],b=cell&&cell.building;
+ let bonus=b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?10:0;
+ if(cell&&cell.owner!==null)bonus+=wallCount(cell.owner);
+ return bonus;
 }
 function currentTerrain(r){
  const b=cityAt(r);
@@ -527,7 +547,8 @@ function ownRegs(i=G.active){return Object.values(G.b).filter(c=>c.owner===i).le
 function totalUnits(i=G.active){let n=Object.values(G.b).filter(c=>c.owner===i).reduce((a,c)=>a+c.units,0);Object.values(G.sea).forEach(s=>n+=(s.fleets[i]||0));return n}
 function cap(i=G.active){return FACTIONS[p(i).faction].cap*ownRegs(i)}
 function units(id,i=G.active){return isSea(id)?(G.sea[id].fleets[i]||0):(G.b[id].owner===i?G.b[id].units:0)}
-function neighbors(id){return isSea(id)?[...SEA[id],...PORTS[id]]:[...R[id][3],...R[id][4]]}
+function physicalNeighbors(id){return isSea(id)?[...SEA[id],...PORTS[id]]:[...R[id][3],...R[id][4]]}
+function neighbors(id){const n=physicalNeighbors(id);if(!isSea(id)){const mate=portalMate(id);if(mate&&!n.includes(mate))n.push(mate)}return n}
 function resetMove(){movable={};usedDest=new Set();attacked=new Set();cycle=1}
 function setMovable(){
  movable={};
@@ -1023,17 +1044,16 @@ function mount(){
  render();
 }
 function toOracle(){if(paidDrawState||isBot())return;G.phase='oracleMove';dest=null;picks={};render()}
-function dragonTargets(){return neighbors(G.dragon)}
-function clickSpot(id){if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
+function dragonTargets(){return physicalNeighbors(G.dragon)}
+function clickSpot(id){if(isBot()||paidDrawState||goldReaction)return;if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
 function roll(){if(paidDrawState)return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
  const c=G.b[G.dragon];
- if(c.building){
-   removeInPlayCard(c.building.owner,c.building.cardId);
-   G.discard.push(c.building.cardId);
-   c.building=null;
+ if(c.building&&c.building.type!=='Portail'){
+   removeInPlayCard(c.building.owner,c.building.cardId);G.discard.push(c.building.cardId);c.building=null;
  }
+ const portalSurvives=!!(c.building&&c.building.type==='Portail');
  c.owner=null;c.units=0;c.hostile=c.originalHostile;
- log('Le Dragon détruit tout sur '+G.dragon+', bâtiments compris.');
+ log(portalSurvives?'Le Dragon détruit les unités sur '+G.dragon+', mais le Portail est inaltérable.':'Le Dragon détruit tout sur '+G.dragon+', bâtiments compris.');
 }G.players.forEach(pl=>{pl.attackTurnBonus=0;pl.defenseTurnBonus=0});
 G.active=(G.active+1)%3;if(G.active===0)G.turn++;G.phase='start';resetMove();render();queueBot('nouveau tour')}
 function die(owner,count){
@@ -1068,7 +1088,7 @@ function floatingActionPosition(target){
 function renderMap(){
  map.querySelectorAll('.spot,.floatActions').forEach(x=>x.remove());
  Object.entries(POS).forEach(([id,xy])=>{const b=document.createElement('button');b.className='spot'+(isSea(id)?' sea':'');b.style.left=xy[0]+'%';b.style.top=xy[1]+'%';
- if(dest===id)b.classList.add('dest');if(buildingMode&&canPlaceBuilding(id))b.classList.add('buildTarget');if(G.phase==='play'&&dest&&legalSources(dest).includes(id))b.classList.add('src');if(G.phase==='oracleMove'&&dragonTargets().includes(id))b.classList.add('oracle');if(battle&&battle.target===id&&battle.kind!=='seaChoice')b.classList.add('battleLoc');
+ if(dest===id)b.classList.add('dest');if(buildingMode&&canPlaceBuilding(id))b.classList.add('buildTarget');if(portalMode&&canPortalRegion(id))b.classList.add('buildTarget');if(portalMode&&portalMode.first===id)b.classList.add('dest');if(G.phase==='play'&&dest&&legalSources(dest).includes(id))b.classList.add('src');if(G.phase==='oracleMove'&&dragonTargets().includes(id))b.classList.add('oracle');if(battle&&battle.target===id&&battle.kind!=='seaChoice')b.classList.add('battleLoc');
  const st=document.createElement('span');st.className='stack';
  const isPvpLandBattle=battle&&battle.kind==='land'&&battle.target===id&&battle.defender!==null&&!battle.hostile;
  if(isSea(id)){
@@ -1088,6 +1108,9 @@ function renderMap(){
    const ad=document.createElement('span');ad.className='battleDie';ad.style.background=COLORS[battle.attacker];ad.textContent=battle.attackUnits;ad.title=p(battle.attacker).name+' : '+battle.attackUnits+' unité(s) attaquante(s)';
    const dd=document.createElement('span');dd.className='battleDie';dd.style.background=COLORS[battle.defender];dd.textContent=battle.defOriginalUnits;dd.title=p(battle.defender).name+' : '+battle.defOriginalUnits+' unité(s) en défense';
    pair.appendChild(ad);pair.appendChild(dd);b.appendChild(pair);
+ }
+ if(!isSea(id)&&G.b[id].building&&G.b[id].building.type==='Portail'){
+   const pi=document.createElement('span');pi.className='portalIcon';pi.textContent='🌀';pi.title='Portail vers '+G.b[id].building.pair;b.appendChild(pi);
  }
  if(!isSea(id)&&fortressAt(id)){
    const fi=document.createElement('img');
@@ -1179,6 +1202,8 @@ function renderInPlay(i){
    const regs=Object.keys(G.b).filter(r=>cityAt(r)&&cityAt(r).owner===i&&cityAt(r).type===c.name);
    extra='<span class="cityTag">🏙 '+(regs.length?regs.join(', '):'Cité en jeu')+' — +5 Or/Récolte</span>';
  }
+ if(c.name==='Murs frontaliers')extra='<span class="fortressTag">🧱 +'+wallCount(i)+' Défense sur toutes vos régions</span>';
+ if(c.name==='Portails'){const regs=portalRegions();extra='<span class="cityTag">🌀 '+(regs.length===2?regs[0]+' ↔ '+regs[1]:'Portails en jeu')+'</span>';}
  d.innerHTML='<b>'+c.name+'</b><small>'+c.type+'</small><small>'+c.effect+'</small>'+extra;
  box.appendChild(d)
 });
@@ -1265,6 +1290,8 @@ function render(){
  }
  if(handPlayer===G.active&&!isBot()&&!choiceState&&c.name==='Taxe'){d.classList.add('playablePermanent');d.title='Jouer Taxe';d.onclick=()=>playTax(handIndex)}
  if(handPlayer===G.active&&!isBot()&&!choiceState&&c.name==='Conseil de guerre'){d.classList.add('playablePermanent');d.title='Jouer Conseil de guerre';d.onclick=()=>playCouncil(handIndex)}
+ if(handPlayer===G.active&&!isBot()&&!choiceState&&!goldReaction&&c.name==='Murs frontaliers'){d.classList.add('playablePermanent');d.title='Poser Murs frontaliers';d.onclick=()=>beginWalls(handIndex)}
+ if(handPlayer===G.active&&!isBot()&&!choiceState&&!goldReaction&&c.name==='Portails'){d.classList.add('playablePermanent');d.title='Poser deux Portails';d.onclick=()=>beginPortals(handIndex)}
  if(goldReaction&&handPlayer!==goldReaction.receiver&&!G.players[handPlayer].bot&&c.name==='Embuscade'){
    d.classList.add('playablePermanent');d.title='Intercepter ce gain d’Or avec Embuscade';
    d.onclick=()=>playAmbush(handPlayer);
