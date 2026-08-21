@@ -73,7 +73,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — pioche 5 Or + fenêtre 15 s</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — pioche 5 Or + Oracle corrigé</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -897,10 +897,10 @@ function mount(){
  log('Montures : toutes vos unités gagnent +1 point de déplacement pour ce tour.');
  render();
 }
-function toOracle(){if(paidDrawState)return;G.phase='oracleMove';dest=null;picks={};render()}
+function toOracle(){if(paidDrawState||isBot())return;G.phase='oracleMove';dest=null;picks={};render()}
 function dragonTargets(){return neighbors(G.dragon)}
 function clickSpot(id){if(isBot()||paidDrawState)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';render()}}
-function roll(){if(paidDrawState)return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
+function roll(){if(paidDrawState||isBot())return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
  const c=G.b[G.dragon];
  if(c.building){
    removeInPlayCard(c.building.owner,c.building.cardId);
@@ -1026,13 +1026,17 @@ function render(){
  $('startTurn').classList.toggle('hidden',G.phase!=='start');['draw','harvest','recruit'].forEach(id=>$(id).disabled=isBot());
  $('toOracle').disabled=isBot()||!!paidDrawState;
  $('buyDraw').disabled=isBot()||p().gold<5||!!battle||!!choiceState||!!paidDrawState;
- ['draw','harvest','recruit','endRecruit','roll'].forEach(id=>{if($(id))$(id).disabled=$(id).disabled||!!paidDrawState});
+ $('draw').disabled=isBot()||!!paidDrawState;
+ $('harvest').disabled=isBot()||!!paidDrawState;
+ $('recruit').disabled=isBot()||!!paidDrawState;
+ $('endRecruit').disabled=!!paidDrawState;
+ $('roll').disabled=isBot()||G.phase!=='oracleRoll'||!!paidDrawState;
  const pd=$('paidDrawWindow');
  pd.classList.toggle('hidden',!paidDrawState);
  if(paidDrawState){
    pd.innerHTML='<b>🃏 Carte piochée — '+paidDrawState.seconds+' s</b><br>Regardez votre main et jouez une carte si vous le souhaitez. Le tour reprendra automatiquement ensuite.';
  }
- if(isBot()){$('status').innerHTML+='<div class="botNotice">🤖 '+pl.name+' joue automatiquement — '+G.phase+'</div>';}$('recruitBox').classList.toggle('hidden',G.phase!=='recruit');$('playBox').classList.toggle('hidden',G.phase!=='play');$('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));$('roll').disabled=G.phase!=='oracleRoll';
+ if(isBot()){$('status').innerHTML+='<div class="botNotice">🤖 '+pl.name+' joue automatiquement — '+G.phase+'</div>';}$('recruitBox').classList.toggle('hidden',G.phase!=='recruit');$('playBox').classList.toggle('hidden',G.phase!=='play');$('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));
  if(G.phase==='oracleMove')$('oracleHint').textContent='Cliquez sur une case violette pour déplacer obligatoirement le Dragon.';if(G.phase==='oracleRoll')$('oracleHint').textContent='Dragon placé sur '+G.dragon+'. Lancez le dé.';
  const src=$('sources');src.innerHTML='';
  if(G.phase==='play'&&buildingMode){
