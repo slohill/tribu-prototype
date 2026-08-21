@@ -53,7 +53,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center"><label>Mode : <select id="gameMode"><option value="1bot">1 joueur + 2 bots</option><option value="2bot">2 joueurs + 1 bot</option><option value="human">3 joueurs humains</option></select></label></div><button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — bots tour corrigé</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — bots autonomes / mains cachées</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -119,11 +119,17 @@ function makeDeck(){const d=[];CARDS.forEach((c,i)=>{for(let n=0;n<c.count;n++)d
 function draw(i,n=1){for(let k=0;k<n;k++){if(!G.deck.length)break;G.players[i].hand.push(G.deck.pop())}}
 function init(){
  G={active:0,turn:1,phase:'start',dragon:'E4',players:[
-  {name:'Joueur 1',faction:0,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false},{name:'Joueur 2',faction:1,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false},{name:'Joueur 3',faction:2,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false}
+  {name:'Joueur 1',faction:0,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false,human:true},{name:'Joueur 2',faction:1,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false,human:true},{name:'Joueur 3',faction:2,gold:0,hand:[],inPlay:[],attackTurnBonus:0,defenseTurnBonus:0,bot:false,human:true}
  ],b:{},sea:{},deck:makeDeck(),discard:[],log:[]};
  const mode=$('gameMode').value;
- if(mode==='1bot'){G.players[1].bot=true;G.players[2].bot=true}
- if(mode==='2bot'){G.players[2].bot=true}
+ G.players.forEach(pl=>{pl.bot=false;pl.human=true});
+ if(mode==='1bot'){
+   G.players[1].bot=true;G.players[1].human=false;
+   G.players[2].bot=true;G.players[2].human=false;
+ }
+ if(mode==='2bot'){
+   G.players[2].bot=true;G.players[2].human=false;
+ }
  Object.entries(R).forEach(([r,v])=>G.b[r]={owner:null,units:0,hostile:!!v[2],originalHostile:!!v[2]});
  Object.keys(SEA).forEach(s=>G.sea[s]={fleets:{}});
  const provinces=[...new Set(Object.values(R).map(v=>v[0]))];
@@ -378,7 +384,12 @@ function renderBattle(){
   $('priorityTimer').textContent=battle.seconds+' s';
   const buttons=$('tacticalButtons');buttons.innerHTML='';
   const tact=tacticalIndexes(priority);
-  if(!tact.length){
+  if(G.players[priority].bot){
+    const info=document.createElement('div');
+    info.className='note';
+    info.textContent='Le bot choisit sa réaction…';
+    buttons.appendChild(info);
+  }else if(!tact.length){
     const info=document.createElement('div');
     info.className='note';
     info.textContent='Aucune carte Tactique en main.';
@@ -397,11 +408,11 @@ function renderBattle(){
       }
       buttons.appendChild(b);
     });
+    const pass=document.createElement('button');
+    pass.textContent='Passer';
+    pass.onclick=passPriority;
+    buttons.appendChild(pass);
   }
-  const pass=document.createElement('button');
-  pass.textContent='Passer';
-  pass.onclick=passPriority;
-  buttons.appendChild(pass);
   if(G.players[priority].bot)botBattleReaction();
   $('priorityStack').innerHTML=battle.stack.length
    ? '<b>Pile — dernière jouée en premier</b>'+
@@ -462,7 +473,7 @@ function commitMovement(n,seaDefender){
    usedDest.add(target);
    log(n+' unité(s) rejoignent '+target+'.');
  }
- dest=null;picks={};render();
+ dest=null;picks={};render();scheduleBot();
 }
 function openSeaChoice(n){
  battle={kind:'seaChoice',target:dest,total:n};
@@ -650,6 +661,12 @@ let pinnedPlayer=null;
 function togglePlayerPeek(i){
  pinnedPlayer=(pinnedPlayer===i?null:i);renderPlayerRail();
 }
+
+function localHumanPlayer(){
+ const idx=G.players.findIndex(pl=>pl.human);
+ return idx>=0?idx:0;
+}
+
 function publicInPlay(i){
  return G.players[i].inPlay||[];
 }
@@ -736,56 +753,74 @@ function botMoveCandidates(){
 function scheduleBot(){
  clearTimeout(botTimer);
  if(!G || !isBot() || battle || harvestReaction)return;
- botTimer=setTimeout(()=>{
-   if(botBusy || !G || !isBot() || battle || harvestReaction)return;
-   botBusy=true;
-   try{botStep()}finally{botBusy=false}
- },550);
+ botTimer=setTimeout(runBotTurn,450);
 }
-function botStep(){
+
+function runBotTurn(){
  if(!G || !isBot() || battle || harvestReaction)return;
 
+ // START: choose exactly one opening action.
  if(G.phase==='start'){
-   if(p().gold<4)doHarvest();else doDraw();
+   // Simple test AI: harvest when poor, otherwise draw.
+   if(p().gold<4){
+     doHarvest();
+   }else{
+     doDraw();
+   }
    return;
  }
 
+ // RECRUIT: should not normally happen for this AI, but never freeze here.
  if(G.phase==='recruit'){
-   // Bots currently never intentionally choose recruitment in this simple AI.
-   G.phase='play';setMovable();render();scheduleBot();return;
- }
-
- if(G.phase==='play'){
+   G.phase='play';
    setMovable();
-   const choices=botMoveCandidates();
-   const attacks=choices.filter(c=>c.attack);
-   const peaceful=choices.filter(c=>!c.attack);
-   const pool=attacks.length?attacks:peaceful;
-
-   if(pool.length){
-     const c=pool[Math.floor(Math.random()*Math.min(pool.length,3))];
-     if(destinationAllowed(c.t)){
-       dest=c.t;picks={};
-       const srcUnits=units(c.s);
-       const send=c.attack?srcUnits:Math.max(1,Math.ceil(srcUnits/2));
-       picks[c.s]=Math.min(send,movableCount(c.s));
-       validate();
-       if(battle || harvestReaction)return;
-     }
-   }
-
-   // Whether it moved or not, the bot finishes its play phase.
-   G.phase='oracleMove';
    render();
    scheduleBot();
    return;
  }
 
+ // PLAY: make at most one legal movement/attack, then always go to Oracle.
+ if(G.phase==='play'){
+   setMovable();
+
+   const choices=botMoveCandidates();
+   const attacks=choices.filter(c=>c.attack);
+   const peaceful=choices.filter(c=>!c.attack);
+   const pool=attacks.length ? attacks : peaceful;
+
+   if(pool.length){
+     const c=pool[0];
+     if(destinationAllowed(c.t)){
+       dest=c.t;
+       picks={};
+       const available=movableCount(c.s);
+       if(available>0){
+         const send=c.attack ? available : Math.max(1,Math.ceil(available/2));
+         picks[c.s]=Math.min(send,available);
+         validate();
+
+         // A battle/reaction now owns the flow. It will reschedule after resolution.
+         if(battle || harvestReaction)return;
+       }
+     }
+   }
+
+   // Never leave a bot sitting in Phase de Jeu.
+   G.phase='oracleMove';
+   dest=null;picks={};
+   render();
+   scheduleBot();
+   return;
+ }
+
+ // ORACLE MOVE: bot always moves dragon itself.
  if(G.phase==='oracleMove'){
    const ts=dragonTargets();
    if(ts.length){
      G.dragon=ts[Math.floor(Math.random()*ts.length)];
      log(p().name+' déplace automatiquement le Dragon vers '+G.dragon+'.');
+   }else{
+     log('Le bot ne trouve aucune destination légale pour le Dragon.');
    }
    G.phase='oracleRoll';
    render();
@@ -793,13 +828,24 @@ function botStep(){
    return;
  }
 
+ // ORACLE ROLL: finish turn.
  if(G.phase==='oracleRoll'){
    roll();
    return;
  }
 
- // Failsafe: if bot lands in an unknown phase, end its turn instead of freezing.
- log('Sécurité bot : phase inconnue "'+G.phase+'", passage au joueur suivant.');
+ // HARVEST REACTION is managed elsewhere.
+ if(G.phase==='harvestReaction')return;
+
+ // Hard failsafe: advance turn instead of freezing.
+ log('Sécurité bot : état bloqué "'+G.phase+'". Fin de tour forcée.');
+ forceEndBotTurn();
+}
+
+function forceEndBotTurn(){
+ clearTimeout(botTimer);
+ dest=null;picks={};
+ G.players.forEach(pl=>{pl.attackTurnBonus=0;pl.defenseTurnBonus=0});
  G.active=(G.active+1)%G.players.length;
  if(G.active===0)G.turn++;
  G.phase='start';
@@ -843,7 +889,7 @@ function botBattleReaction(){
 
 function render(){
  if(!G)return;renderMap();renderPlayerRail();const pl=p(),f=FACTIONS[pl.faction];
- const botState=pl.bot?'<div class="note" style="margin-top:7px">🤖 Le bot joue automatiquement…</div>':'';
+ const botState=pl.bot?'<div class="note" style="margin-top:7px">🤖 Le bot joue automatiquement — phase : '+G.phase+'</div>':'';
  $('status').innerHTML='<b><span class="dot" style="background:'+COLORS[G.active]+'"></span> '+pl.name+(pl.bot?' 🤖':'')+'</b><br>'+f.name+'<div><span class="badge">Tour '+G.turn+'</span><span class="badge">Or '+pl.gold+'</span><span class="badge">Unités '+totalUnits()+'/'+cap()+'</span><span class="badge">Cartes '+pl.hand.length+'</span></div>'+botState;
  $('startTurn').classList.toggle('hidden',G.phase!=='start');['draw','harvest','recruit'].forEach(id=>$(id).disabled=isBot());
  
@@ -866,14 +912,19 @@ function render(){
    });
    if(!ab.children.length)ab.innerHTML='<small>Aucune Embuscade jouable par un joueur humain.</small>';
  }
- const handPlayer=(battle && battle.kind!=='seaChoice')?currentPriorityPlayer():G.active;
+ const handPlayer=localHumanPlayer();
  const hp=p(handPlayer);
  $('handOwner').style.borderColor=COLORS[handPlayer];
  $('handOwner').style.background=COLORS[handPlayer]+'22';
- $('handOwner').innerHTML='MAIN DE '+hp.name.toUpperCase()+'<br><span style="font-size:12px;font-weight:500">'+FACTIONS[hp.faction].name+'</span>';
+ $('handOwner').innerHTML='VOTRE MAIN — '+hp.name.toUpperCase()+'<br><span style="font-size:12px;font-weight:500">'+FACTIONS[hp.faction].name+'</span>';
  $('handCount').textContent=hp.hand.length;
  const h=$('hand');h.innerHTML='';
- hp.hand.forEach(id=>{const c=CARDS[id],d=document.createElement('div');d.className='card';d.innerHTML='<b>'+c.name+'</b><small>'+c.type+'</small><small>'+c.effect+'</small>';h.appendChild(d)});
+ hp.hand.forEach(id=>{
+   const c=CARDS[id],d=document.createElement('div');
+   d.className='card';
+   d.innerHTML='<b>'+c.name+'</b><small>'+c.type+'</small><small>'+c.effect+'</small>';
+   h.appendChild(d);
+ });
  renderInPlay(G.active);
  if(battle && battle.kind!=='seaChoice')renderBattle();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
