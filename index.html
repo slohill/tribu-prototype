@@ -121,7 +121,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Décimation + Retour — fenêtres corrigées</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Section de l’ombre sans coût de déplacement</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -367,7 +367,15 @@ function resolveEgnobombe(r){
    parent.defOriginalUnits=c.units;
    parent.defenseBase=(c.hostile?5:(def===null?0:c.units*FACTIONS[p(def).faction].def))+buildingDefense(parent.target);
  }
- if(parent){battle=parent;battle.seconds=s.parentSeconds||15;resumeBattleTimer()}
+ if(parent){
+   battle=parent;battle.seconds=s.parentSeconds||15;resumeBattleTimer();
+   render();return;
+ }
+ if(isDecimated(G.active)){
+   log(p().name+' est décimé : son tour se termine immédiatement, sans Oracle.');
+   advanceTurn('joueur décimé après Egnobombe');
+   return;
+ }
  render();queueBot('reprise après Egnobombe');
 }
 function renderEgnobombeBanner(){
@@ -429,12 +437,40 @@ function shadowTargetLegal(r){
 }
 function consumeShadowUnits(){
  const s=shadowState,actor=s.player;
+ s.carriedMove=[];
  for(const [r,n] of Object.entries(s.picks)){
-   const c=G.b[r];c.units=Math.max(0,c.units-n);
+   const c=G.b[r];
+
+   // Section de l’ombre ne consomme PAS le déplacement.
+   // Si c’est le tour de l’acteur, on transporte l’état exact de mouvement
+   // des unités choisies vers leur nouvelle région.
+   if(actor===G.active){
+     const arr=movable[r]||[];
+     const carried=[];
+     for(let k=0;k<n;k++){
+       // Prendre d’abord une unité encore mobile ; sinon une unité déjà épuisée.
+       let idx=arr.findIndex(mp=>mp>0);
+       if(idx<0)idx=arr.length?0:-1;
+       if(idx>=0)carried.push(arr.splice(idx,1)[0]);
+       else carried.push(1);
+     }
+     movable[r]=arr;
+     s.carriedMove.push(...carried);
+   }else{
+     // Hors de son tour, le prochain début de tour reconstruira normalement movable.
+     for(let k=0;k<n;k++)s.carriedMove.push(1);
+   }
+
+   c.units=Math.max(0,c.units-n);
    if(c.units===0){c.owner=null;c.hostile=c.originalHostile}
  }
  const idx=G.players[actor].hand.indexOf(s.cardId);if(idx>=0)G.players[actor].hand.splice(idx,1);
  G.discard.push(s.cardId);
+}
+function restoreShadowMovementAt(r,n){
+ if(!shadowState||shadowState.player!==G.active)return;
+ const carried=(shadowState.carriedMove||[]).slice(0,n);
+ movable[r]=(movable[r]||[]).concat(carried);
 }
 function chooseShadowTarget(r){
  if(!shadowTargetLegal(r))return;
@@ -443,6 +479,7 @@ function chooseShadowTarget(r){
  if(c.owner===actor&&parent&&parent.target===r&&parent.defender===actor){
    const coeff=FACTIONS[p(actor).faction].def;
    c.units+=n;parent.defOriginalUnits+=n;parent.defenseBase+=n*coeff;
+   restoreShadowMovementAt(r,n);
    shadowState=null;battle=parent;battle.seconds=s.parentBattleSeconds||15;
    log('Section de l’ombre renforce '+r+' avec '+n+' unité(s) : +'+(n*coeff)+' Défense au siège.');
    resumeBattleTimer();render();return;
@@ -450,6 +487,7 @@ function chooseShadowTarget(r){
  // Empty / neutral peaceful conquest.
  if(c.owner===null&&!c.hostile){
    c.owner=actor;c.units=n;c.hostile=false;
+   restoreShadowMovementAt(r,n);
    if(c.building&&c.building.owner!==actor&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(c.building.type)){
      const label=c.building.type;transferBuildingCard(c.building,actor);log(p(actor).name+' capture '+label+' grâce à Section de l’ombre en '+r+'.');
    }
@@ -461,7 +499,7 @@ function chooseShadowTarget(r){
  if(parent)battleStack.push({battle:parent,seconds:s.parentBattleSeconds||15});
  const defender=c.hostile?null:c.owner;
  const defBase=(c.hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(r);
- battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,hostile:c.hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true};
+ battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,hostile:c.hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true,shadowMove:(s.carriedMove||[]).slice()};
  log('Section de l’ombre ouvre une nouvelle bataille en '+r+' : '+n+' Att contre '+defBase+' Déf.');startReactionWindow();render();
 }
 function resumeBattleTimer(){
@@ -974,13 +1012,11 @@ function hideBattle(){
   clearInterval(battleTick);
 }
 function buildPriorityOrder(){
-  // Défenseur d'abord s'il existe, puis les autres joueurs dans l'ordre,
-  // avec l'attaquant inclus. Tous peuvent jouer des tactiques.
+  // Seuls les participants à la bataille ont une priorité à passer.
+  // Les autres joueurs ne sont jamais obligés de "Passer" une bataille qui ne les concerne pas.
   const order=[];
   if(battle.defender!==null && battle.defender!==undefined) order.push(battle.defender);
-  for(let i=0;i<G.players.length;i++){
-    if(!order.includes(i)) order.push(i);
-  }
+  if(!order.includes(battle.attacker)) order.push(battle.attacker);
   return order;
 }
 function startReactionWindow(){
@@ -1124,7 +1160,7 @@ function renderBattle(){
   $('priorityInfo').className='priorityOwner';
   $('priorityInfo').style.borderColor=COLORS[priority];
   $('priorityInfo').style.background=COLORS[priority]+'22';
-  $('priorityInfo').innerHTML=p(priority).name.toUpperCase()+' PEUT RÉAGIR<br><span style="font-size:12px;font-weight:500">Jouez directement une carte depuis votre main, ou passez.</span>';
+  $('priorityInfo').innerHTML=p(priority).name.toUpperCase()+' PEUT RÉAGIR<br><span style="font-size:12px;font-weight:500">Jouez directement une carte depuis votre main, ou passez si vous participez à cette bataille.</span>';
   $('priorityTimer').textContent=battle.seconds+' s';
 
   const buttons=$('tacticalButtons');buttons.innerHTML='';
@@ -1272,6 +1308,9 @@ function resolveBattle(){
    }
    if(battle.kind==='land'){
      const c=G.b[target];c.owner=attacker;c.units=surv;c.hostile=false;
+     if(battle.fromShadow&&attacker===G.active){
+       movable[target]=(movable[target]||[]).concat((battle.shadowMove||[]).slice(0,surv));
+     }
      if(c.building&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(c.building.type)){
        if(battle.trebuchetsUsed){
          const destroyed=c.building,label=destroyed.type;
@@ -1317,6 +1356,11 @@ function resolveBattle(){
    const paused=battleStack.pop();battle=paused.battle;battle.seconds=paused.seconds||15;
    log('La bataille précédente reprend en '+battle.target+'.');resumeBattleTimer();render();return;
  }
+ if(isDecimated(G.active)){
+   log(p().name+' est décimé : son tour se termine immédiatement, sans Oracle.');
+   advanceTurn('joueur décimé');
+   return;
+ }
  if(isBot()){
    G.phase='oracleMove';dest=null;picks={};
  }
@@ -1349,10 +1393,10 @@ function mount(){
  log('Montures : toutes vos unités gagnent +1 point de déplacement pour ce tour.');
  render();
 }
-function toOracle(){if(paidDrawState||isBot())return;G.phase='oracleMove';dest=null;picks={};render()}
+function toOracle(){if(paidDrawState||isBot()||isDecimated(G.active))return;G.phase='oracleMove';dest=null;picks={};render()}
 function dragonTargets(){return physicalNeighbors(G.dragon)}
 function clickSpot(id){if(returnState){if(returnRegions(returnState.player).includes(id))return reformAt(id);return;}if(egnoState){if(egnoTargetLegal(id))return resolveEgnobombe(id);return;}if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
-function roll(){if(paidDrawState)return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
+function roll(){if(paidDrawState||isDecimated(G.active))return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
  const c=G.b[G.dragon];
  if(c.building&&c.building.type!=='Portail'){
    removeInPlayCard(c.building.owner,c.building.cardId);G.discard.push(c.building.cardId);c.building=null;
