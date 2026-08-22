@@ -121,7 +121,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Décimation + Retour</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Décimation + Retour — fenêtres corrigées</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -321,6 +321,7 @@ function startEgnobombe(handIndex){
 function cancelEgnobombe(){
  if(!egnoState)return;
  const s=egnoState;egnoState=null;
+ clearTopBanner();
  log('Egnobombe annulée : la carte reste en main.');
  if(s.parentBattle){battle=s.parentBattle;battle.seconds=s.parentSeconds||15;resumeBattleTimer()}
  render();
@@ -356,6 +357,7 @@ function resolveEgnobombe(r){
  if(idx>=0)G.players[actor].hand.splice(idx,1);
  G.discard.push(id);
  egnoState=null;
+ clearTopBanner();
 
  log(p(actor).name+' déclenche Egnobombe en '+r+' : '+sacrificed+' unité(s) sacrifiée(s), unités détruites sur '+affected.join(', ')+'.');checkDecimations();
 
@@ -823,6 +825,7 @@ function advanceTurn(reason='nouveau tour'){
 }
 function passReturn(){
  if(!returnState)return;
+ clearTopBanner();
  log(p().name+' choisit de ne pas revenir ce tour.');
  advanceTurn('retour passé');
 }
@@ -830,10 +833,17 @@ function reformAt(r){
  if(!returnState||!returnRegions(G.active).includes(r))return;
  const i=G.active,pl=G.players[i],c=G.b[r];
  c.owner=i;c.units=3;c.hostile=false;pl.decimated=false;returnState=null;
+ clearTopBanner();
  pl.gold=3;draw(i,3);
  log('⚔ Les troupes de '+pl.name+' se sont reformées !');
  log(pl.name+' revient en '+r+' avec 3 unités, 3 cartes et 3 Or.');
  G.phase='start';resetMove();render();queueBot('joueur reformé');
+}
+function clearTopBanner(){
+ const el=$('battleBanner');
+ if(!el)return;
+ el.classList.add('hidden');
+ el.innerHTML='';
 }
 function renderReturnBanner(){
  if(!returnState)return false;
@@ -1671,7 +1681,7 @@ function render(){
 });
  renderInPlay(localViewer());
  renderHandBattleState();
- if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();
+ if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();else clearTopBanner();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
