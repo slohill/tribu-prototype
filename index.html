@@ -121,7 +121,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Section de l’ombre v1</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Section de l’ombre + Egnobombe</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -190,7 +190,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 const DATA={"POS":{"A1":[9.46,28.86],"A2":[9.26,39.04],"A3":[14.84,43.36],"A4":[18.03,47.96],"A5":[13.15,59.53],"B1":[9.46,66.37],"B2":[16.14,68.32],"B3":[8.96,83.79],"B4":[13.94,81.7],"B5":[23.41,87.28],"C1":[26.1,23.84],"C2":[25.9,34.02],"C3":[26.79,44.62],"C4":[33.96,29.56],"C5":[41.33,35.97],"D1":[51.89,37.37],"D2":[59.76,31.79],"D3":[70.42,29.42],"D4":[64.94,38.34],"D5":[57.97,44.34],"E1":[35.46,46.71],"E2":[47.41,45.45],"E3":[55.28,53.12],"E4":[43.13,54.52],"E5":[50.7,61.9],"F1":[28.19,56.61],"F2":[36.25,60.79],"F3":[34.06,69.02],"F4":[43.23,69.57],"F5":[50.9,71.66],"G1":[64.84,52.28],"G2":[64.14,62.04],"G3":[60.66,73.06],"G4":[69.72,70.69],"G5":[67.63,82.26],"H1":[84.26,23.84],"H2":[88.45,28.16],"H3":[83.07,35.0],"H4":[81.57,46.57],"H5":[86.85,42.52],"I1":[82.17,55.21],"I2":[89.14,56.19],"I3":[82.57,64.83],"I4":[89.04,67.48],"I5":[85.76,77.1],"U":[16.24,17.01],"V":[29.88,79.61],"W":[48.8,24.12],"X":[73.41,49.36],"Y":[95.22,37.23],"Z":[77.79,87.42]},"R":{"A1":["A","e",0,["A2"],["U"]],"A2":["A","e",0,["A1"],[]],"A3":["A","e",0,["A4"],["U"]],"A4":["A","e",0,["A3"],[]],"A5":["A","e",1,["B1","B2"],["U"]],"B1":["B","e",0,["A5","B2"],[]],"B2":["B","e",0,["A5","B1"],["V"]],"B3":["B","t",1,["B4"],[]],"B4":["B","t",0,["B3"],["V"]],"B5":["B","t",0,[],["V"]],"C1":["C","e",0,["C2","C4"],["U"]],"C2":["C","e",0,["C1","C3","C4"],[]],"C3":["C","e",1,["C2","C4","E1","F1"],[]],"C4":["C","t",0,["C1","C2","C3","C5","E1"],[]],"C5":["C","t",0,["C4","E1","E2","D1"],["W"]],"D1":["D","t",0,["C5","E2","D2","D5"],["W"]],"D2":["D","t",0,["D1","D3","D4","D5"],[]],"D3":["D","t",0,["D2","D4"],[]],"D4":["D","t",0,["D2","D3","D5","G1"],["X"]],"D5":["D","t",1,["D1","D2","D4","E2","E3","G1"],[]],"E1":["E","t",0,["C3","C4","C5","E2","E4","F1","F2"],[]],"E2":["E","t",0,["E1","E3","E4","C5","D1","D5"],[]],"E3":["E","t",0,["E2","E4","E5","D5","G1","G2"],[]],"E4":["E","t",1,["E1","E2","E3","E5","F2","F4"],[]],"E5":["E","t",0,["E3","E4","F4","F5","G2","G3"],[]],"F1":["F","t",0,["C3","E1","F2","F3"],["V"]],"F2":["F","t",0,["E1","E4","F1","F3","F4"],[]],"F3":["F","t",1,["F1","F2","F4"],[]],"F4":["F","t",0,["F2","F3","F5","E4","E5"],[]],"F5":["F","t",0,["E5","F4","G3"],["V"]],"G1":["G","t",0,["D4","D5","E3","G2"],["X"]],"G2":["G","d",1,["G1","G3","G4","E3","E5"],[]],"G3":["G","d",0,["G2","G4","G5","F5","E5"],[]],"G4":["G","d",0,["G2","G3","G5"],[]],"G5":["G","d",0,["G3","G4"],["Z"]],"H1":["H","t",0,["H2","H3"],[]],"H2":["H","t",0,["H1","H3","H5"],[]],"H3":["H","t",1,["H1","H2","H4","H5"],[]],"H4":["H","t",0,["H3","H5","I1"],["X"]],"H5":["H","d",0,["H2","H3","H4","I1","I2"],["Y"]],"I1":["I","d",0,["H4","H5","I2","I3"],[]],"I2":["I","d",0,["H5","I1","I3","I4"],["Y"]],"I3":["I","d",0,["I1","I2","I4","I5"],[]],"I4":["I","d",0,["I2","I3","I5"],[]],"I5":["I","d",1,["I3","I4"],["Z"]]},"SEA":{"U":["W","V"],"V":["U","Z"],"W":["U","X","Y"],"X":["W","Z","Y"],"Y":["W","X","Z"],"Z":["V","X","Y"]},"PORTS":{"U":["A1","A3","A5","C1"],"V":["B2","B4","B5","F1","F5"],"W":["C5","D1"],"X":["D4","G1","H4"],"Y":["H5","I2"],"Z":["G5","I5"]},"cards":[{"name":"Assassin","count":4,"type":"Tactique","effect":"Lancez un dé. Sur 4, 5 ou 6, éliminez l’Agent ou le Héros ciblé. Sur 1, 2 ou 3, l’effet échoue."},{"name":"Balistes","count":4,"type":"Tactique","effect":"+2 d’Attaque sur toutes vos attaques jusqu’à la fin du tour, ou +2 de Défense sur toutes vos défenses jusqu’à la fin du tour du joueur actif."},{"name":"Caravane de commerce","count":2,"type":"Tactique","effect":"Révélez autant de cartes Tribu qu’il y a de joueurs. Chacun choisit une carte dans le sens horaire."},{"name":"Catapultes","count":3,"type":"Tactique","effect":"+5 d’Attaque ou de Défense durant une bataille."},{"name":"Conseil de guerre","count":3,"type":"Tactique","effect":"Piochez 2 cartes puis défaussez 2 cartes."},{"name":"Egnobombe","count":1,"type":"Tactique","effect":"Sacrifiez toutes vos unités d’une région terrestre contenant au moins 5 soldats ; détruisez les unités des cases adjacentes et mers reliées."},{"name":"Divination de l’Oracle","count":2,"type":"Tactique","effect":"Activez l’Oracle visible ou choisissez une carte Oracle à placer au-dessus de la pile après mélange."},{"name":"Embuscade","count":3,"type":"Tactique","effect":"Prenez l’Or qu’un adversaire devait gagner par une Récolte ou une carte Tribu."},{"name":"Espion","count":4,"type":"Permanent — Agent","effect":"Une fois par tour pendant votre Phase de Jeu, regardez une carte au hasard dans la main d’un adversaire."},{"name":"Forteresse","count":3,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une de vos régions ; peut changer de propriétaire."},{"name":"Icenia, la cité blanche","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région enneigée, +5 Or à la Récolte, immunité locale à Givre mortel."},{"name":"Mur de pique","count":4,"type":"Tactique","effect":"+4 de Défense sur une bataille."},{"name":"Montures","count":2,"type":"Tactique","effect":"Au choix : nouveau point de déplacement pour toutes vos unités jusqu’à la fin du tour, ou +4 Attaque sur une bataille."},{"name":"Murs frontaliers","count":3,"type":"Permanent — Bâtiment","effect":"Toutes vos régions gagnent +1 Défense ; cumulable."},{"name":"Pluie de flèches","count":4,"type":"Tactique","effect":"+3 d’Attaque ou de Défense sur une bataille."},{"name":"Sundo, cité du soleil","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région désertique, +5 Or à la Récolte, immunité locale à Tempête de sable."},{"name":"Taxe","count":4,"type":"Tactique","effect":"+1 Or pour chaque case où vous avez des unités."},{"name":"Voleur","count":3,"type":"Permanent — Agent","effect":"Une fois par tour, tentez de voler une carte ; sur 1 le Voleur est défaussé. Peut exploiter une carte vue par un Espion."},{"name":"Section de l’ombre","count":1,"type":"Tactique","effect":"Jusqu’à 6 unités peuvent conquérir une case de votre choix ou défendre une case attaquée, même hors de votre tour."},{"name":"Plan des trébuchets","count":2,"type":"Permanent — Objet","effect":"Bonus contre Murs frontaliers, Forteresses et Cités ; destruction des bâtiments si victoire ; non cumulable."},{"name":"Portails","count":1,"type":"Permanent — Bâtiment","effect":"Deux régions terrestres deviennent adjacentes. Portails inaltérables et inutilisables par le Dragon."},{"name":"Pyrodontes de guerre","count":3,"type":"Tactique","effect":"+5 d’Attaque sur une bataille en région tempérée ; effet perdu si le climat change avant résolution."}]},POS=DATA.POS,R=DATA.R,SEA=DATA.SEA,PORTS=DATA.PORTS,CARDS=DATA.cards;
 const COLORS=['#ff4fc3','#ffd92f','#91e87c'];
 const FACTIONS=[{name:'Griffes-Blanches',cap:3,def:1},{name:'Reptones',cap:3,def:1},{name:'Yonkaïs',cap:2,def:3}];
-let G=null,dest=null,picks={},movable={},usedDest=new Set(),attacked=new Set(),cycle=1,battle=null,battleTick=null,botTimer=null,botToken=0,botReactionTimer=null,buildingMode=null,portalMode=null,choiceState=null,paidDrawState=null,paidDrawTick=null,goldReaction=null,goldReactionTick=null,shadowState=null,shadowTick=null,battleStack=[];
+let G=null,dest=null,picks={},movable={},usedDest=new Set(),attacked=new Set(),cycle=1,battle=null,battleTick=null,botTimer=null,botToken=0,botReactionTimer=null,buildingMode=null,portalMode=null,choiceState=null,paidDrawState=null,paidDrawTick=null,goldReaction=null,goldReactionTick=null,shadowState=null,shadowTick=null,battleStack=[],egnoState=null;
 const $=id=>document.getElementById(id),map=$('map'),isSea=id=>!!SEA[id];
 
 // Tablette/mobile : empêcher la sélection native du navigateur sur la carte.
@@ -219,7 +219,7 @@ function init(){
    G.log.push(p(i).name+' commence en province '+prov+' : '+pair.join(' + ')+'.');
  });
  G.players.forEach((pl,i)=>draw(i,3));
- resetMove();dest=null;picks={};battle=null;buildingMode=null;shadowState=null;battleStack=[];clearInterval(shadowTick);
+ resetMove();dest=null;picks={};battle=null;buildingMode=null;shadowState=null;egnoState=null;battleStack=[];clearInterval(shadowTick);
  clearInterval(battleTick);clearTimeout(botTimer);clearTimeout(botReactionTimer);clearInterval(paidDrawTick);paidDrawState=null;clearGoldReactionTimer();goldReaction=null;botToken++;
  $('battlePanel').classList.add('hidden');
  G.log.unshift('Partie test démarrée : provinces de départ aléatoires, 6 unités et 3 cartes par joueur.');
@@ -302,6 +302,79 @@ function noteComplexAnytimeCard(handIndex){
  const c=CARDS[id];
  log(c.name+' est jouable maintenant. Sa résolution complète sera intégrée avec son effet.');
  render();
+}
+
+function egnoEligibleRegions(i){
+ return Object.keys(G.b).filter(r=>G.b[r].owner===i&&G.b[r].units>=5);
+}
+function canPlayEgnobombe(i=localViewer()){
+ return !!G&&!G.players[i].bot&&egnoEligibleRegions(i).length>0&&!egnoState&&!shadowState&&!choiceState;
+}
+function startEgnobombe(handIndex){
+ const actor=localViewer(),id=G.players[actor].hand[handIndex];
+ if(id===undefined||CARDS[id].name!=='Egnobombe'||!canPlayEgnobombe(actor))return;
+ egnoState={player:actor,cardId:id,parentBattle:battle||null,parentSeconds:battle?battle.seconds:null};
+ if(battle){clearInterval(battleTick);clearTimeout(botReactionTimer)}
+ log(p(actor).name+' prépare Egnobombe : choisissez une de vos régions contenant au moins 5 unités.');
+ render();
+}
+function cancelEgnobombe(){
+ if(!egnoState)return;
+ const s=egnoState;egnoState=null;
+ log('Egnobombe annulée : la carte reste en main.');
+ if(s.parentBattle){battle=s.parentBattle;battle.seconds=s.parentSeconds||15;resumeBattleTimer()}
+ render();
+}
+function egnoTargetLegal(r){
+ return !!egnoState&&!isSea(r)&&G.b[r].owner===egnoState.player&&G.b[r].units>=5;
+}
+function resolveEgnobombe(r){
+ if(!egnoTargetLegal(r))return;
+ const s=egnoState,actor=s.player,id=s.cardId,parent=s.parentBattle;
+ const affected=neighbors(r);
+ const land=affected.filter(x=>!isSea(x));
+ const seas=affected.filter(x=>isSea(x));
+
+ // Sacrifice every unit on the chosen region.
+ const sacrificed=G.b[r].units;
+ G.b[r].units=0;G.b[r].owner=null;G.b[r].hostile=G.b[r].originalHostile;
+
+ // Destroy every unit on adjacent land regions. Buildings survive.
+ land.forEach(x=>{
+   const c=G.b[x];
+   if(c.units>0){
+     c.units=0;c.owner=null;c.hostile=c.originalHostile;
+   }
+ });
+
+ // Destroy every fleet in directly linked/adjacent sea areas.
+ seas.forEach(x=>{
+   Object.keys(G.sea[x].fleets).forEach(k=>G.sea[x].fleets[k]=0);
+ });
+
+ const idx=G.players[actor].hand.indexOf(id);
+ if(idx>=0)G.players[actor].hand.splice(idx,1);
+ G.discard.push(id);
+ egnoState=null;
+
+ log(p(actor).name+' déclenche Egnobombe en '+r+' : '+sacrificed+' unité(s) sacrifiée(s), unités détruites sur '+affected.join(', ')+'.');
+
+ // If a paused battle's defending region was hit, refresh its board-based defense.
+ if(parent&&parent.kind==='land'&&affected.includes(parent.target)){
+   const c=G.b[parent.target],def=parent.defender;
+   parent.defOriginalUnits=c.units;
+   parent.defenseBase=(c.hostile?5:(def===null?0:c.units*FACTIONS[p(def).faction].def))+buildingDefense(parent.target);
+ }
+ if(parent){battle=parent;battle.seconds=s.parentSeconds||15;resumeBattleTimer()}
+ render();queueBot('reprise après Egnobombe');
+}
+function renderEgnobombeBanner(){
+ if(!egnoState)return false;
+ const el=$('battleBanner');
+ el.classList.remove('hidden');
+ el.innerHTML='<h3>💣 EGNOBOMBE</h3><div class="battleDetail">Choisissez une de vos régions contenant au moins 5 unités. Toutes ses unités seront sacrifiées et toutes les unités des cases adjacentes seront détruites. Les Portails comptent comme adjacence.</div><div class="shadowControls"><button id="egnoCancel">Annuler</button></div>';
+ setTimeout(()=>{const b=$('egnoCancel');if(b)b.onclick=cancelEgnobombe},0);
+ return true;
 }
 function shadowCardIndex(i){return G.players[i].hand.findIndex(id=>CARDS[id]&&CARDS[id].name==='Section de l’ombre')}
 function shadowTotal(){return shadowState?Object.values(shadowState.picks).reduce((a,b)=>a+b,0):0}
@@ -932,6 +1005,7 @@ function battleBreakdown(side){
  return bits.join(' + ');
 }
 function renderBattleBanner(){
+ if(renderEgnobombeBanner())return;
  if(renderShadowBanner())return;
  const el=$('battleBanner');
  if(!battle || battle.kind==='seaChoice'){el.classList.add('hidden');return}
@@ -1213,7 +1287,7 @@ function mount(){
 }
 function toOracle(){if(paidDrawState||isBot())return;G.phase='oracleMove';dest=null;picks={};render()}
 function dragonTargets(){return physicalNeighbors(G.dragon)}
-function clickSpot(id){if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
+function clickSpot(id){if(egnoState){if(egnoTargetLegal(id))return resolveEgnobombe(id);return;}if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
 function roll(){if(paidDrawState)return;const n=1+Math.floor(Math.random()*6);log('Dé Oracle : '+n+'.');if(n===1)log('Oracle activé — effets à brancher ensuite.');if(n===6&&!isSea(G.dragon)){
  const c=G.b[G.dragon];
  if(c.building&&c.building.type!=='Portail'){
@@ -1259,7 +1333,7 @@ function floatingActionPosition(target){
 function renderMap(){
  map.querySelectorAll('.spot,.floatActions').forEach(x=>x.remove());
  Object.entries(POS).forEach(([id,xy])=>{const b=document.createElement('button');b.className='spot'+(isSea(id)?' sea':'');b.style.left=xy[0]+'%';b.style.top=xy[1]+'%';
- if(dest===id)b.classList.add('dest');if(shadowState&&shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)b.classList.add('shadowSrc');if(shadowState&&shadowState.stage==='target'&&shadowTargetLegal(id))b.classList.add('shadowTarget');if(buildingMode&&canPlaceBuilding(id))b.classList.add('buildTarget');if(portalMode&&canPortalRegion(id))b.classList.add('buildTarget');if(portalMode&&portalMode.first===id)b.classList.add('dest');if(G.phase==='play'&&dest&&legalSources(dest).includes(id))b.classList.add('src');if(G.phase==='oracleMove'&&dragonTargets().includes(id))b.classList.add('oracle');if(battle&&battle.target===id&&battle.kind!=='seaChoice')b.classList.add('battleLoc');
+ if(dest===id)b.classList.add('dest');if(egnoState&&egnoTargetLegal(id))b.classList.add('shadowTarget');if(shadowState&&shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)b.classList.add('shadowSrc');if(shadowState&&shadowState.stage==='target'&&shadowTargetLegal(id))b.classList.add('shadowTarget');if(buildingMode&&canPlaceBuilding(id))b.classList.add('buildTarget');if(portalMode&&canPortalRegion(id))b.classList.add('buildTarget');if(portalMode&&portalMode.first===id)b.classList.add('dest');if(G.phase==='play'&&dest&&legalSources(dest).includes(id))b.classList.add('src');if(G.phase==='oracleMove'&&dragonTargets().includes(id))b.classList.add('oracle');if(battle&&battle.target===id&&battle.kind!=='seaChoice')b.classList.add('battleLoc');
  const st=document.createElement('span');st.className='stack';
  const isPvpLandBattle=battle&&battle.kind==='land'&&battle.target===id&&battle.defender!==null&&!battle.hostile;
  if(isSea(id)){
@@ -1419,7 +1493,8 @@ function renderHandBattleState(){
  cards.forEach((d,idx)=>{
    d.classList.remove('battlePlayable','battleBlocked');
    const sid=G.players[viewer].hand[idx];
-   if(battle&&sid!==undefined&&CARDS[sid].name==='Section de l’ombre'&&!shadowState){d.classList.add('battlePlayable');d.title='Jouer Section de l’ombre maintenant';d.onclick=()=>startShadow(idx);return}
+   if(battle&&sid!==undefined&&CARDS[sid].name==='Section de l’ombre'&&!shadowState&&!egnoState){d.classList.add('battlePlayable');d.title='Jouer Section de l’ombre maintenant';d.onclick=()=>startShadow(idx);return}
+   if(battle&&sid!==undefined&&CARDS[sid].name==='Egnobombe'&&canPlayEgnobombe(viewer)){d.classList.add('battlePlayable');d.title='Jouer Egnobombe maintenant';d.onclick=()=>startEgnobombe(idx);return}
    if(!battle)return;
    if(currentPriorityPlayer()!==viewer)return;
    const id=G.players[viewer].hand[idx];if(id===undefined)return;
@@ -1525,7 +1600,14 @@ function render(){
  if(isViewerHand&&!choiceState&&c.name==='Section de l’ombre'){
    d.classList.add('playablePermanent');d.title='Jouer Section de l’ombre';d.onclick=()=>startShadow(handIndex);
  }
- if(isViewerHand&&!choiceState&&['Assassin','Egnobombe','Divination de l’Oracle'].includes(c.name)){
+ if(isViewerHand&&!choiceState&&c.name==='Egnobombe'){
+   if(canPlayEgnobombe(handPlayer)){
+     d.classList.add('playablePermanent');d.title='Jouer Egnobombe — choisissez une région avec au moins 5 unités';d.onclick=()=>startEgnobombe(handIndex);
+   }else{
+     d.title='Egnobombe nécessite une de vos régions avec au moins 5 unités.';
+   }
+ }
+ if(isViewerHand&&!choiceState&&['Assassin','Divination de l’Oracle'].includes(c.name)){
    d.classList.add('playablePermanent');d.title='Jouable à n’importe quel moment';d.onclick=()=>noteComplexAnytimeCard(handIndex);
  }
  if(handPlayer===G.active&&!isBot()&&!choiceState&&!goldReaction&&G.phase==='play'&&c.name==='Murs frontaliers'){
@@ -1535,7 +1617,7 @@ function render(){
 });
  renderInPlay(localViewer());
  renderHandBattleState();
- if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();
+ if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
