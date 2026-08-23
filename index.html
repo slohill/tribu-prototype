@@ -154,7 +154,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Malédiction du Dragon</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Portails corrigés</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -377,6 +377,17 @@ function triggerRichDragon(i,after){
  if(G.players[i].gold<40)return false;
  log('🐉 '+p(i).name+' atteint 40 Or ou plus.');
  showDragonCurse(i,after);
+ return true;
+}
+function renderPortalBanner(){
+ if(!portalMode)return false;
+ const el=$('battleBanner');el.classList.remove('hidden');
+ el.innerHTML='<h3>PORTAILS</h3><div class="battleDetail">'+
+   (portalMode.first
+     ? 'Premier Portail : <b>'+portalMode.first+'</b>. Choisissez la seconde région terrestre sans bâtiment.'
+     : 'Choisissez la première région terrestre sans bâtiment.')+
+   '</div><div class="shadowControls"><button id="portalCancel">Annuler</button></div>';
+ setTimeout(()=>{const b=$('portalCancel');if(b)b.onclick=cancelPortals},0);
  return true;
 }
 function renderRichDragonBanner(){
@@ -861,15 +872,23 @@ function beginPortals(handIndex){
  portalMode={cardId:found.id,first:null,owner:found.viewer};dest=null;picks={};
  log('Portails : choisissez une première région terrestre sans bâtiment.');render();
 }
+function cancelPortals(){
+ if(!portalMode)return;
+ const first=portalMode.first;
+ portalMode=null;
+ log(first?'Pose des Portails annulée après sélection de '+first+'. La carte reste en main.':'Pose des Portails annulée. La carte reste en main.');
+ clearTopBanner();
+ render();
+}
 function canPortalRegion(r){return portalMode&&!isSea(r)&&!hasBuilding(r)&&portalMode.first!==r}
 function choosePortalRegion(r){
  if(!canPortalRegion(r))return;
  if(!portalMode.first){portalMode.first=r;log('Premier Portail : '+r+'. Choisissez la seconde région.');render();return}
  const a=portalMode.first,b=r,id=portalMode.cardId,owner=portalMode.owner,idx=G.players[owner].hand.indexOf(id);
- if(idx<0){portalMode=null;render();return}
+ if(idx<0){portalMode=null;clearTopBanner();render();return}
  G.players[owner].hand.splice(idx,1);G.players[owner].inPlay.push(id);
  G.b[a].building={type:'Portail',cardId:id,owner,pair:b};G.b[b].building={type:'Portail',cardId:id,owner,pair:a};
- portalMode=null;log(p(owner).name+' pose les Portails : '+a+' ↔ '+b+'. Ces régions sont maintenant adjacentes pour les unités.');render();
+ portalMode=null;clearTopBanner();log(p(owner).name+' pose les Portails : '+a+' ↔ '+b+'. Ces régions sont maintenant adjacentes pour les unités.');render();
 }
 function hasBuilding(r){return !!G.b[r].building}
 function fortressAt(r){return G.b[r] && G.b[r].building && G.b[r].building.type==='Forteresse' ? G.b[r].building : null}
@@ -1108,7 +1127,7 @@ function returnRegions(i){
  return Object.keys(G.b).filter(r=>{
    const c=G.b[r];
    if(c.units>0||c.hostile)return false;
-   return !c.building||c.building.owner===i;
+   return !c.building||c.building.type==='Portail'||c.building.owner===i;
  });
 }
 function beginReturnChoice(){
@@ -1170,7 +1189,15 @@ function setMovable(){
 }
 function movableCount(id){return (movable[id]||[]).filter(mp=>mp>0).length}
 function legalSources(d){return neighbors(d).filter(s=>movableCount(s)>0)}
-function enemyRegion(id){return !isSea(id)&&(G.b[id].hostile||(G.b[id].owner!==null&&G.b[id].owner!==G.active)||(G.b[id].building&&G.b[id].building.owner!==null&&G.b[id].building.owner!==G.active))}
+function enemyRegion(id){
+ if(isSea(id))return false;
+ const c=G.b[id],b=c.building;
+ const hostileOccupant=c.hostile||(c.owner!==null&&c.owner!==G.active);
+ // Forteresse/Cité can represent an enemy holding when the region is empty.
+ // A Portail is only a connection: its owner never makes the region hostile.
+ const hostileBuilding=!!(b&&b.type!=='Portail'&&b.owner!==null&&b.owner!==G.active);
+ return hostileOccupant||hostileBuilding;
+}
 function seaEnemies(id){
   return Object.entries(G.sea[id].fleets)
     .filter(([i,n])=>+i!==G.active && n>0)
@@ -1374,6 +1401,7 @@ function battleBreakdown(side){
  return bits.join(' + ');
 }
 function renderBattleBanner(){
+ if(renderPortalBanner())return;
  if(renderRichDragonBanner())return;
  if(renderReturnBanner())return;
  if(renderEgnobombeBanner())return;
@@ -2060,7 +2088,7 @@ function render(){
  const railBuy=$('buyDraw');
  if(railBuy)railBuy.disabled=isDecimated(buyViewer)||G.players[buyViewer].bot||G.players[buyViewer].gold<5||!!paidDrawState||!!dragonRichState||!!dragonCurseState;
  renderHandBattleState();
- if(dragonRichState)renderRichDragonBanner();else if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();else clearTopBanner();
+ if(portalMode)renderPortalBanner();else if(dragonRichState)renderRichDragonBanner();else if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();else clearTopBanner();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
