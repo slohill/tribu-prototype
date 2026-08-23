@@ -110,7 +110,9 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .shadowTarget{box-shadow:0 0 0 4px #8b5cf6,0 0 16px #8b5cf6!important}
 .shadowDie{display:inline-flex;width:31px;height:31px;border-radius:6px;background:#050505;color:#fff;border:2px solid #999;align-items:center;justify-content:center;font-weight:900;font-size:16px;margin-left:8px;vertical-align:middle}
 .shadowControls{display:flex;gap:7px;justify-content:center;margin-top:7px}.shadowControls button{width:auto;padding:5px 10px}
-.playerCard.decimated{filter:grayscale(.85);opacity:.68}</style></head>
+.playerCard.decimated{filter:grayscale(.85);opacity:.68}
+#battlePass{font-weight:900;font-size:15px;padding:8px 14px;min-width:110px}
+</style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
 <label>Mode :
@@ -121,7 +123,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Section de l’ombre sans coût de déplacement</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Passer pour tous les joueurs</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1012,11 +1014,18 @@ function hideBattle(){
   clearInterval(battleTick);
 }
 function buildPriorityOrder(){
-  // Seuls les participants à la bataille ont une priorité à passer.
-  // Les autres joueurs ne sont jamais obligés de "Passer" une bataille qui ne les concerne pas.
   const order=[];
-  if(battle.defender!==null && battle.defender!==undefined) order.push(battle.defender);
-  if(!order.includes(battle.attacker)) order.push(battle.attacker);
+  const viewer=localViewer();
+
+  // Un joueur humain spectateur garde toujours 15 secondes pour intervenir
+  // avec une carte jouable à n'importe quel moment, mais il n'a pas à cliquer "Passer".
+  if(viewer!==battle.attacker && viewer!==battle.defender && !G.players[viewer].bot && !isDecimated(viewer)){
+    order.push(viewer);
+  }
+
+  // Puis les véritables participants à la bataille.
+  if(battle.defender!==null && battle.defender!==undefined && !order.includes(battle.defender))order.push(battle.defender);
+  if(!order.includes(battle.attacker))order.push(battle.attacker);
   return order;
 }
 function startReactionWindow(){
@@ -1160,19 +1169,35 @@ function renderBattle(){
   $('priorityInfo').className='priorityOwner';
   $('priorityInfo').style.borderColor=COLORS[priority];
   $('priorityInfo').style.background=COLORS[priority]+'22';
-  $('priorityInfo').innerHTML=p(priority).name.toUpperCase()+' PEUT RÉAGIR<br><span style="font-size:12px;font-weight:500">Jouez directement une carte depuis votre main, ou passez si vous participez à cette bataille.</span>';
+  const spectatorPriority=priority!==battle.attacker&&priority!==battle.defender;
+  $('priorityInfo').innerHTML=p(priority).name.toUpperCase()+' PEUT RÉAGIR<br><span style="font-size:12px;font-weight:500">'+
+    (spectatorPriority?'Jouez une carte depuis votre main ou passez.':'Jouez directement une carte depuis votre main, ou passez.')+
+    '</span>';
   $('priorityTimer').textContent=battle.seconds+' s';
 
   const buttons=$('tacticalButtons');buttons.innerHTML='';
-  if(isBot(priority)){
-    const info=document.createElement('div');
-    info.className='note';info.textContent='Le bot réfléchit à sa réaction…';
-    buttons.appendChild(info);queueBotReaction();
-  }else{
+  const spectator=priority!==battle.attacker&&priority!==battle.defender;
+  const participant=priority===battle.attacker||priority===battle.defender;
+
+  if(!isBot(priority)){
+    // Tout joueur humain ayant une fenêtre de réaction peut la passer,
+    // qu'il participe directement à la bataille ou qu'il soit spectateur.
     const pass=document.createElement('button');
+    pass.id='battlePass';
     pass.textContent='Passer';
     pass.onclick=passPriority;
     buttons.appendChild(pass);
+
+    if(!participant){
+      const info=document.createElement('div');
+      info.className='note';
+      info.textContent='Vous pouvez intervenir depuis votre main ou passer immédiatement.';
+      buttons.appendChild(info);
+    }
+  }else{
+    const info=document.createElement('div');
+    info.className='note';info.textContent='Le bot réfléchit à sa réaction…';
+    buttons.appendChild(info);queueBotReaction();
   }
 
   $('priorityStack').innerHTML=battle.stack.length
