@@ -146,7 +146,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — EN JEU compact interactif</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — EN JEU compact interactif v3</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2013,5 +2013,12 @@ function render(){
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
+document.addEventListener('pointerdown',e=>{
+ const preview=$('inPlayPreview');
+ if(!preview||preview.classList.contains('hidden'))return;
+ if(preview.contains(e.target)||e.target.closest('.inPlayTitleBtn'))return;
+ hideInPlayPreview();
+ renderInPlaySelection();
+});
 $('restart').onclick=init;$('agentClose').onclick=closeAgentModal;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('endRecruit').onclick=beginPlay;$('toOracle').onclick=toOracle;$('choiceConfirm').onclick=confirmCouncil;$('roll').onclick=roll;
 </script></body></html>
