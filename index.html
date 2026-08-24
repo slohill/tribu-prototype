@@ -165,6 +165,13 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .pileIcon .pileGlyph{grid-row:1!important;align-self:start!important;font-size:14px!important}
 .pileIcon b{grid-row:2!important;align-self:end!important;font-size:12px!important;line-height:1!important}
 .pileIcon small{position:absolute!important;left:50%;top:50%;transform:translate(-50%,-50%);font-size:6px!important;opacity:.85}
+
+.playerRail{position:relative;z-index:90!important}
+.playerCard{position:relative}
+.playerCard:hover,.playerCard.pinned{z-index:140!important}
+.playerPeek{z-index:145!important}
+
+.battleDie.defenderDie{min-width:25px!important;height:25px!important;font-size:13px!important;border-width:2px!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -176,7 +183,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Egnobombe mer + Trébuchets v7</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Batailles mer + IA Or + Dragon v8</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -516,15 +523,20 @@ function playAmbush(playerIndex){
 }
 function maybeBotAmbush(){
  if(!goldReaction)return false;
- const bots=eligibleAmbushers(goldReaction.receiver).filter(i=>G.players[i].bot);
+ const bots=eligibleAmbushers(goldReaction.receiver).filter(i=>G.players[i].bot&&G.players[i].gold+goldReaction.amount<40);
  if(!bots.length)return false;
- // Bots use Embuscade on meaningful gains; this keeps their play simple but functional.
+ // Un bot ne joue jamais Embuscade si le gain le ferait atteindre 40 Or.
  const chooser=bots[0];
- if(goldReaction.amount>=2){setTimeout(()=>{if(goldReaction&&goldReaction.receiver!==chooser)playAmbush(chooser)},650);return true}
+ if(goldReaction.amount>=2){setTimeout(()=>{if(goldReaction&&goldReaction.receiver!==chooser&&G.players[chooser].gold+goldReaction.amount<40)playAmbush(chooser)},650);return true}
  return false;
 }
 function offerGoldGain(receiver,amount,source,after){
  if(amount<=0){if(after==='beginPlay')beginPlay();else render();return}
+ if(G.players[receiver].bot&&source==='Taxe'&&G.players[receiver].gold+amount>=40){
+   log(p(receiver).name+' (bot) renonce à Taxe pour ne pas déclencher la Malédiction du Dragon.');
+   if(after==='beginPlay')beginPlay();else render();
+   return;
+ }
  goldReaction={receiver,amount,source,after,seconds:10};
  log(p(receiver).name+' doit recevoir '+amount+' Or : fenêtre de réaction de 10 secondes.');
  startGoldReactionTimer();
@@ -1278,7 +1290,7 @@ function botAdvance(){
  if(G.phase==='start'){
    let harvestGain=ownRegs(G.active)*2;
    Object.keys(G.b).forEach(r=>{const b=cityAt(r);if(b&&b.owner===G.active)harvestGain+=5});
-   const chooseHarvest=harvestGain>=6&&(p().gold<8||Math.random()<0.55);
+   const chooseHarvest=(p().gold+harvestGain<40)&&harvestGain>=6&&(p().gold<8||Math.random()<0.55);
    if(chooseHarvest){
      log(p().name+' (bot) choisit Récolte.');
      doHarvest();
@@ -1669,7 +1681,9 @@ function battleBreakdown(side){
    bits.push(battle.attackUnits+' unité(s)');
    const tb=p(battle.attacker).attackTurnBonus||0;if(tb)bits.push('Balistes +'+tb);if(battle.trebuchetsUsed)bits.push('Plan des trébuchets +'+trebuchetBonus());
  }else{
-   bits.push(battle.defenseBase+' Défense totale');if(battle.kind==='land'&&fortressAt(battle.target))bits.push('Forteresse +10 incluse');if(battle.kind==='land'&&cityAt(battle.target))bits.push(cityAt(battle.target).type+' +10 incluse');
+   bits.push(battle.defenseBase+' Défense totale');
+   if(battle.kind==='sea'&&battle.defender!==null&&FACTIONS[p(battle.defender).faction].def>1)
+     bits.push(battle.defOriginalUnits+' unité(s) ×'+FACTIONS[p(battle.defender).faction].def);if(battle.kind==='land'&&fortressAt(battle.target))bits.push('Forteresse +10 incluse');if(battle.kind==='land'&&cityAt(battle.target))bits.push(cityAt(battle.target).type+' +10 incluse');
    if(battle.defender!==null){const tb=p(battle.defender).defenseTurnBonus||0;if(tb)bits.push('Balistes +'+tb)}
  }
  battle.stack.forEach(entry=>{
@@ -1857,12 +1871,12 @@ function openSeaChoice(n){
  battle={kind:'seaChoice',target:dest,total:n};
  $('battlePanel').classList.remove('hidden');
  $('battleSideInfo').innerHTML='<b>Aire maritime '+dest+'</b><br>Des flottes adverses sont présentes.';
- $('priorityInfo').textContent='Choisissez : coexister ou attaquer.';
+ $('priorityInfo').textContent='Choisissez : naviguer ou attaquer une flotte.';
  $('priorityTimer').textContent='';
  $('priorityStack').innerHTML='';
  const actions=$('tacticalButtons');actions.innerHTML='';
  const peaceful=document.createElement('button');
- peaceful.textContent='Coexister sans attaquer';
+ peaceful.textContent='Naviguer';
  peaceful.onclick=()=>{const total=battle.total;hideBattle();battle=null;commitMovement(total,null)};
  actions.appendChild(peaceful);
  seaEnemies(dest).forEach(e=>{
@@ -1887,9 +1901,11 @@ function startLandBattle(target,n){
 }
 function startSeaBattle(target,n,defender){
  const defUnits=G.sea[target].fleets[defender]||0;
+ const defCoeff=FACTIONS[p(defender).faction].def;
+ const defBase=defUnits*defCoeff;
  attacked.add(target);
- battle={kind:'sea',target,attacker:G.active,defender,attackUnits:n,defenseBase:defUnits,defOriginalUnits:defUnits,hostile:false,stack:[],seconds:10,reactionSide:'defender'};
- log('Bataille maritime en '+target+' : '+n+' contre '+defUnits+'.');
+ battle={kind:'sea',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:defUnits,hostile:false,stack:[],seconds:10,reactionSide:'defender'};
+ log('Bataille maritime en '+target+' : '+n+' Att contre '+defBase+' Déf ('+defUnits+' unité(s) ×'+defCoeff+').');
  startReactionWindow();
 }
 function resolveBattle(){
@@ -2025,17 +2041,31 @@ function roll(){
  const n=1+Math.floor(Math.random()*6);
  log('Dé Oracle : '+n+'.');
  if(n===1)log('Oracle activé — effets à brancher ensuite.');
+
  if(n===6&&!isSea(G.dragon)){
-   const c=G.b[G.dragon],victim=c.owner;
+   const c=G.b[G.dragon];
+   const stronghold=fortressAt(G.dragon)||cityAt(G.dragon);
+   const hadDestructibleContent=c.units>0||!!stronghold;
+   const victim=c.owner!==null?c.owner:(stronghold?stronghold.owner:null);
+
    if(c.building&&c.building.type!=='Portail'){
-     removeInPlayCard(c.building.owner,c.building.cardId);G.discard.push(c.building.cardId);c.building=null;
+     removeInPlayCard(c.building.owner,c.building.cardId);
+     G.discard.push(c.building.cardId);
+     c.building=null;
    }
    const portalSurvives=!!(c.building&&c.building.type==='Portail');
    c.owner=null;c.units=0;c.hostile=c.originalHostile;
-   log(portalSurvives?'Le Dragon détruit les unités sur '+G.dragon+', mais le Portail est inaltérable.':'Le Dragon détruit tout sur '+G.dragon+', bâtiments compris.');
-   checkDecimations();
-   showDragonSixNotice(victim,()=>advanceTurn('nouveau tour'));
-   render();return;
+
+   if(hadDestructibleContent){
+     log(portalSurvives?'Le Dragon détruit les unités sur '+G.dragon+', mais le Portail est inaltérable.':'Le Dragon détruit tout sur '+G.dragon+', bâtiments compris.');
+     checkDecimations();
+     showDragonSixNotice(victim,()=>advanceTurn('nouveau tour'));
+     render();return;
+   }
+
+   // Case réellement vide (ou uniquement Portail) : aucun encart de destruction.
+   log('Le Dragon souffle sur '+G.dragon+', mais il n’y avait rien à détruire.');
+   checkDecimations();advanceTurn('nouveau tour');return;
  }
  checkDecimations();advanceTurn('nouveau tour');
 }
@@ -2079,23 +2109,25 @@ function renderMap(){
    if(returnStrongholds(returnState.player).includes(id))b.classList.add('returnStronghold');
  }if(egnoState&&egnoTargetLegal(id))b.classList.add('shadowTarget');if(shadowState&&shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)b.classList.add('shadowSrc');if(shadowState&&shadowState.stage==='target'&&shadowTargetLegal(id))b.classList.add('shadowTarget');if(buildingMode&&canPlaceBuilding(id))b.classList.add('buildTarget');if(portalMode&&canPortalRegion(id))b.classList.add('buildTarget');if(portalMode&&portalMode.first===id)b.classList.add('dest');if(G.phase==='play'&&dest&&legalSources(dest).includes(id))b.classList.add('src');if(G.phase==='oracleMove'&&dragonTargets().includes(id))b.classList.add('oracle');if(battle&&battle.target===id&&battle.kind!=='seaChoice')b.classList.add('battleLoc');
  const st=document.createElement('span');st.className='stack';
- const isPvpLandBattle=battle&&battle.kind==='land'&&battle.target===id&&battle.defender!==null&&!battle.hostile;
+ const isPvpBattle=battle&&battle.target===id&&battle.defender!==null&&!battle.hostile&&(battle.kind==='land'||battle.kind==='sea');
  if(isSea(id)){
-   Object.entries(G.sea[id].fleets).forEach(([o,n])=>{
-     const shown=visibleUnitsForSource(id,+o,n);
-     if(shown>0)st.appendChild(die(+o,shown));
-   })
+   if(!isPvpBattle){
+     Object.entries(G.sea[id].fleets).forEach(([o,n])=>{
+       const shown=visibleUnitsForSource(id,+o,n);
+       if(shown>0)st.appendChild(die(+o,shown));
+     });
+   }
  }
  else{
    const c=G.b[id];
    const shown=c.owner!==null?visibleUnitsForSource(id,c.owner,c.units):0;
-   if(!isPvpLandBattle&&c.owner!==null&&shown>0)st.appendChild(die(c.owner,shown,id));
+   if(!isPvpBattle&&c.owner!==null&&shown>0)st.appendChild(die(c.owner,shown,id));
  }
  if(st.children.length)b.appendChild(st);
- if(isPvpLandBattle){
+ if(isPvpBattle){
    const pair=document.createElement('span');pair.className='battleDicePair';
-   const ad=document.createElement('span');ad.className='battleDie';ad.style.background=COLORS[battle.attacker];ad.textContent=battle.attackUnits;ad.title=p(battle.attacker).name+' : '+battle.attackUnits+' unité(s) attaquante(s)';
-   const dd=document.createElement('span');dd.className='battleDie';dd.style.background=COLORS[battle.defender];dd.textContent=battle.defOriginalUnits;dd.title=p(battle.defender).name+' : '+battle.defOriginalUnits+' unité(s) en défense';
+   const ad=document.createElement('span');ad.className='battleDie attackerDie';ad.style.background=COLORS[battle.attacker];ad.textContent=battle.attackUnits;ad.title=p(battle.attacker).name+' : '+battle.attackUnits+' unité(s) attaquante(s)';
+   const dd=document.createElement('span');dd.className='battleDie defenderDie';dd.style.background=COLORS[battle.defender];dd.textContent=battle.defOriginalUnits;dd.title=p(battle.defender).name+' : '+battle.defOriginalUnits+' unité(s) en défense';
    pair.appendChild(ad);pair.appendChild(dd);b.appendChild(pair);
  }
  if(!isSea(id)&&G.b[id].building&&G.b[id].building.type==='Portail'){
