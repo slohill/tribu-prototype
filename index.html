@@ -144,9 +144,9 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .dragonCurseText{font-size:15px;line-height:1.55;text-align:left;white-space:pre-line}
 #dragonCurseContinue{margin-top:16px;padding:9px 22px;font-size:15px;font-weight:900}
 
-.deckCorner{position:absolute;left:8px;top:8px;z-index:58;display:flex;gap:5px;height:16.66%;max-height:92px;min-height:58px}
-.pileIcon{height:100%;aspect-ratio:.68;min-width:42px;padding:3px!important;border:2px solid #727d77!important;border-radius:7px!important;background:#18201d!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.pileIcon .pileGlyph{font-size:22px;line-height:1}.pileIcon b{font-size:16px}.pileIcon small{font-size:8px}
+.deckCorner{position:absolute;left:8px;top:8px;z-index:58;display:flex;gap:5px;height:8.33%;max-height:46px;min-height:29px}
+.pileIcon{height:100%;width:58px;min-width:58px;padding:2px!important;border:2px solid #727d77!important;border-radius:7px!important;background:#18201d!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.pileIcon .pileGlyph{font-size:14px;line-height:1}.pileIcon b{font-size:12px}.pileIcon small{font-size:7px}
 .discardCards{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;max-height:55vh;overflow:auto}
 .discardMini{width:130px;background:#242c28;border:1px solid #59635e;border-radius:6px;padding:6px;font-size:10px}
 .inPlayTitleBtn.usedAgent{opacity:.42;filter:grayscale(1);border-color:#555!important;box-shadow:none!important}
@@ -161,7 +161,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Montures + Agents + Pioche</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Interface + Bots + timing pioche</b><span class="badge">3 joueurs test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -706,15 +706,24 @@ function spendDraw(){
  if(!G||G.players[viewer].bot||G.players[viewer].gold<5||paidDrawState)return;
  G.players[viewer].gold-=5;
  draw(viewer,1);
- paidDrawState={player:viewer,seconds:15,phase:G.phase};
- log(p(viewer).name+' dépense 5 Or, pioche 1 carte et dispose de 15 secondes pour la consulter ou jouer une carte.');
+
+ // Pendant une bataille, la pioche est comprise dans la fenêtre de réaction
+ // déjà en cours : aucun nouveau décompte n'est ouvert.
+ if(battle&&battle.kind!=='seaChoice'){
+   log(p(viewer).name+' dépense 5 Or et pioche 1 carte pendant la bataille. Le décompte de bataille continue.');
+   render();
+   return;
+ }
+
+ paidDrawState={player:viewer,seconds:10,phase:G.phase};
+ log(p(viewer).name+' dépense 5 Or, pioche 1 carte et dispose de 10 secondes pour la consulter ou jouer une carte.');
  clearInterval(paidDrawTick);
  paidDrawTick=setInterval(()=>{
    if(!paidDrawState){clearInterval(paidDrawTick);return}
    paidDrawState.seconds--;
    if(paidDrawState.seconds<=0){
      clearInterval(paidDrawTick);
-     log('Fin de la fenêtre de 15 secondes après la pioche payante.');
+     log('Fin de la fenêtre de 10 secondes après la pioche payante.');
      paidDrawState=null;
      render();
      queueBot('fin fenêtre pioche');
@@ -1083,6 +1092,72 @@ function botCandidates(){
  });
  return {attacks,moves};
 }
+function botRecruitSome(){
+ if(!isBot()||p().gold<=0||totalUnits()>=cap())return false;
+ const regs=Object.keys(G.b).filter(r=>{
+   if(G.b[r].owner!==G.active)return false;
+   const cl=R[r][1],f=FACTIONS[p().faction].name;
+   if(f==='Griffes-Blanches'&&cl==='d')return false;
+   if(f==='Reptones'&&cl==='e')return false;
+   return true;
+ });
+ if(!regs.length)return false;
+
+ // Recrute 1 à 3 fois selon les moyens, sans vider systématiquement toute la caisse.
+ const attempts=Math.min(3,p().gold,Math.max(0,cap()-totalUnits()));
+ let done=0;
+ for(let k=0;k<attempts;k++){
+   if(p().gold<=1&&Math.random()<0.65)break;
+   const r=regs[Math.floor(Math.random()*regs.length)],before=totalUnits();
+   recruitAt(r);
+   if(totalUnits()>before)done++;
+ }
+ if(done)log(p().name+' (bot) renforce ses territoires avant de se déplacer.');
+ return done>0;
+}
+function botPlayUsefulCard(){
+ if(!isBot()||G.phase!=='play')return false;
+ const hand=p().hand;
+
+ // Murs frontaliers : simple et utile.
+ let idx=hand.findIndex(id=>CARDS[id].name==='Murs frontaliers');
+ if(idx>=0){
+   const id=hand.splice(idx,1)[0];p().inPlay.push(id);
+   log(p().name+' (bot) joue Murs frontaliers.');
+   return true;
+ }
+
+ // Espion / Voleur : les poser pour rendre les Agents présents dans les tests.
+ idx=hand.findIndex(id=>['Espion','Voleur'].includes(CARDS[id].name));
+ if(idx>=0){
+   const id=hand.splice(idx,1)[0];p().inPlay.push(id);agentDefaults(G.active);
+   p().inPlayUID[p().inPlay.length-1]='a'+G.active+'_'+(++p().agentSeq);
+   log(p().name+' (bot) met '+CARDS[id].name+' en jeu.');
+   return true;
+ }
+
+ // Plan des trébuchets : le bot peut le préparer.
+ idx=hand.findIndex(id=>CARDS[id].name==='Plan des trébuchets');
+ if(idx>=0&&!playerHasTrebuchets(G.active)){
+   const id=hand.splice(idx,1)[0];p().inPlay.push(id);
+   log(p().name+' (bot) met Plan des trébuchets en jeu.');
+   return true;
+ }
+
+ // Une Forteresse sur sa région la plus peuplée sans bâtiment.
+ idx=hand.findIndex(id=>CARDS[id].name==='Forteresse');
+ if(idx>=0){
+   const regs=Object.keys(G.b).filter(r=>G.b[r].owner===G.active&&!hasBuilding(r));
+   if(regs.length){
+     regs.sort((a,b)=>G.b[b].units-G.b[a].units);
+     const r=regs[0],id=hand.splice(idx,1)[0];
+     p().inPlay.push(id);G.b[r].building={type:'Forteresse',cardId:id,owner:G.active};
+     log(p().name+' (bot) construit une Forteresse sur '+r+'.');
+     return true;
+   }
+ }
+ return false;
+}
 function botAdvance(){
  if(!G || !isBot() || battle || goldReaction)return;
 
@@ -1104,6 +1179,8 @@ function botAdvance(){
 
  if(G.phase==='play'){
    setMovable();
+   botRecruitSome();
+   botPlayUsefulCard();
    const {attacks,moves}=botCandidates();
    const choice=attacks[0] || moves[0] || null;
 
@@ -1486,7 +1563,7 @@ function renderBattleBanner(){
  el.classList.remove('hidden');
  el.innerHTML='<h3>⚔ BATAILLE ! — '+battle.target+'</h3>'+
  '<div class="battleScore"><span style="color:'+COLORS[battle.attacker]+'">'+p(battle.attacker).name+' — ATTAQUE : '+ap+'</span>'+
- '<span>' + defenderName+' — DÉFENSE : '+dp+'</span></div>'+
+ '<span style="color:'+(battle.defender===null?'#ddd':COLORS[battle.defender])+'">' + defenderName+' — DÉFENSE : '+dp+'</span></div>'+
  '<div class="battleDetail">'+battleBreakdown('attacker')+' &nbsp; | &nbsp; '+battleBreakdown('defender')+'</div>';
 }
 
@@ -1512,7 +1589,10 @@ function queueBotReaction(){
    // Third-party bots never donate direct military bonuses.
    if(mine===null || other===null){passPriority();return}
 
-   if(mine<=other && legal.length){
+   if(legal.length && (mine<=other+2 || Math.random()<0.28)){
+     // Prefer the largest immediately useful military bonus.
+     legal.sort((a,b)=>battleBonusFor(CARDS[b.id],priorityRef===battle.attacker?'attacker':'defender')-
+                        battleBonusFor(CARDS[a.id],priorityRef===battle.attacker?'attacker':'defender'));
      playBattleCard(legal[0].index);
    }else{
      passPriority();
@@ -1526,9 +1606,10 @@ function renderBattle(){
   showBattle();
   const ap=battlePower('attacker'),dp=battlePower('defender');
   const defenderName=battle.defender===null?'Peuple hostile':p(battle.defender).name;
+  const defenderColor=battle.defender===null?'#ddd':COLORS[battle.defender];
   $('battleSideInfo').innerHTML=
-    '<b>'+p(battle.attacker).name+'</b> : '+ap+' Attaque<br>'+
-    '<b>'+defenderName+'</b> : '+dp+' Défense';
+    '<b style="color:'+COLORS[battle.attacker]+'">'+p(battle.attacker).name+' : '+ap+' ATTAQUE</b><br>'+
+    '<b style="color:'+defenderColor+'">'+defenderName+' : '+dp+' DÉFENSE</b>';
   const priority=currentPriorityPlayer();
   $('priorityInfo').className='priorityOwner';
   $('priorityInfo').style.borderColor=COLORS[priority];
