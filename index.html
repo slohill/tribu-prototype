@@ -218,7 +218,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Colonne gauche stable v22</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Oracle Dragon + climat corrigés v23</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -418,8 +418,13 @@ function init(){
    G.log.push(p(i).name+' commence en province '+prov+' : '+pair.join(' + ')+'.');
  });
  G.players.forEach((pl,i)=>{draw(i,3);agentDefaults(i)});
- resetMove();dest=null;picks={};battle=null;buildingMode=null;shadowState=null;egnoState=null;battleStack=[];clearInterval(shadowTick);
- clearInterval(battleTick);clearTimeout(botTimer);clearTimeout(botReactionTimer);clearInterval(paidDrawTick);paidDrawState=null;caravanState=null;oraclePassArmed=false;clearGoldReactionTimer();goldReaction=null;botToken++;
+ resetMove();dest=null;picks={};battle=null;buildingMode=null;shadowState=null;egnoState=null;battleStack=[];
+ clearInterval(shadowTick);clearInterval(battleTick);clearTimeout(botTimer);clearTimeout(botReactionTimer);clearInterval(paidDrawTick);
+ clearInterval(oracleNoticeTick);clearInterval(dragonSixTick);
+ paidDrawState=null;caravanState=null;oraclePassArmed=false;oracleState=null;seaStormState=null;oracleNoticeState=null;
+ dragonSixState=null;dragonPublicState=null;dragonCurseState=null;dragonRichState=null;returnState=null;portalMode=null;
+ clearGoldReactionTimer();goldReaction=null;botToken++;
+ ['oracleNoticeOverlay','dragonSixOverlay','dragonPublicOverlay','dragonCurseOverlay','agentOverlay','choiceOverlay','discardOverlay'].forEach(id=>{const el=$(id);if(el)el.classList.add('hidden')});
  $('battlePanel').classList.add('hidden');
  G.log.unshift('Partie test démarrée : provinces de départ aléatoires, 6 unités et 3 cartes par joueur.');
  render();
@@ -1233,14 +1238,16 @@ function currentTerrain(r){
  if(b&&b.type==='Sundo, cité du soleil')return 'd';
  const base=R[r][1],active=G&&G.oracleActive!==null?ORACLES[G.oracleActive].name:null;
  if(active==='Canicule'){
+   // enneigée → tempérée ; tempérée → désertique ; désertique reste désertique
    if(base==='e')return 't';
    if(base==='t')return 'd';
-   return 'd';
+   if(base==='d')return 'd';
  }
  if(active==='Vague de froid'){
+   // tempérée → enneigée ; désertique → tempérée ; enneigée reste enneigée
    if(base==='t')return 'e';
    if(base==='d')return 't';
-   return 'e';
+   if(base==='e')return 'e';
  }
  return base;
 }
@@ -2345,8 +2352,8 @@ function playerImmuneToOracle(i,name){
         (name==='Tempête de sable'&&factionName(i)==='Reptones');
 }
 function oracleEffectText(name){
- if(name==='Canicule')return 'La chaleur transforme les régions : enneigé → tempéré, tempéré → désertique.';
- if(name==='Vague de froid')return 'Le froid transforme les régions : tempéré → enneigé, désertique → tempéré.';
+ if(name==='Canicule')return 'La chaleur transforme les régions : enneigée → tempérée, tempérée → désertique. Les régions désertiques restent désertiques.';
+ if(name==='Vague de froid')return 'Le froid transforme les régions : tempérée → enneigée, désertique → tempérée. Les régions enneigées restent enneigées.';
  if(name==='Givre mortel')return 'Chaque joueur sacrifie la moitié supérieure de ses régions enneigées. Les Griffes-Blanches sont immunisés.';
  if(name==='Tempête de sable')return 'Chaque joueur sacrifie la moitié supérieure de ses régions désertiques. Les Reptones sont immunisés.';
  if(name==='Tempête en mer')return 'Tout déplacement impliquant la mer : pair = réussite, impair = unités perdues.';
@@ -2394,7 +2401,9 @@ function activateOracle(){
    }
    if(o.name==='En quête de destruction'){
      oracleState={kind:'dragon5',player:G.active,remaining:5,visited:new Set([G.dragon])};
-     log('En quête de destruction : déplacez le Dragon sur 5 cases différentes.');render();return;
+     log('En quête de destruction : le Dragon doit parcourir 5 cases différentes.');
+     if(G.players[G.active].bot){botOracleDragonStep();return}
+     render();return;
    }
    if(o.name==='Tempête en mer'){render();advanceTurn('Oracle résolu');return}
    advanceTurn('Oracle résolu');
@@ -2438,9 +2447,26 @@ function oracleSacrificeClick(r){
    oracleState.index++;advanceOracleSacrifice();
  }else render();
 }
+function oracleDragonChoices(){
+ if(!oracleState||oracleState.kind!=='dragon5')return [];
+ const neigh=physicalNeighbors(G.dragon);
+ const fresh=neigh.filter(id=>!oracleState.visited.has(id));
+ return fresh.length?fresh:neigh;
+}
+function botOracleDragonStep(){
+ if(!oracleState||oracleState.kind!=='dragon5')return;
+ const choices=oracleDragonChoices();
+ if(!choices.length){oracleState=null;log('En quête de destruction : aucun déplacement possible.');advanceTurn('Oracle résolu');return}
+ const id=choices[Math.floor(Math.random()*choices.length)];
+ G.dragon=id;oracleState.visited.add(id);oracleState.remaining--;
+ log('Dragon → '+id+' ('+oracleState.remaining+' déplacement(s) restant(s)).');
+ render();
+ if(oracleState.remaining<=0){oracleState=null;checkDecimations();advanceTurn('Oracle résolu');return}
+ setTimeout(botOracleDragonStep,350);
+}
 function oracleDragon5Click(id){
  if(!oracleState||oracleState.kind!=='dragon5'||oracleState.player!==localViewer())return;
- if(!physicalNeighbors(G.dragon).includes(id)||oracleState.visited.has(id))return;
+ if(!oracleDragonChoices().includes(id))return;
  G.dragon=id;oracleState.visited.add(id);oracleState.remaining--;
  log('Dragon → '+id+' ('+oracleState.remaining+' déplacement(s) restant(s)).');
  if(oracleState.remaining<=0){oracleState=null;checkDecimations();render();advanceTurn('Oracle résolu');return}
@@ -2542,7 +2568,7 @@ function renderMap(){
  map.querySelectorAll('.spot,.floatActions').forEach(x=>x.remove());
  Object.entries(POS).forEach(([id,xy])=>{const b=document.createElement('button');b.className='spot'+(isSea(id)?' sea':'');b.style.left=xy[0]+'%';b.style.top=xy[1]+'%';
  if(dest===id)b.classList.add('dest');
- if(oracleState&&oracleState.kind==='dragon5'&&physicalNeighbors(G.dragon).includes(id)&&!oracleState.visited.has(id))b.classList.add('oracle');
+ if(oracleState&&oracleState.kind==='dragon5'&&oracleState.player===localViewer()&&oracleDragonChoices().includes(id))b.classList.add('oracle');
  if(oracleState&&oracleState.kind==='sacrifice'){
    const q=oracleState.queues[oracleState.index];
    if(q&&q.player===localViewer()&&q.eligible.includes(id)&&!q.chosen.includes(id))b.classList.add('shadowTarget');
