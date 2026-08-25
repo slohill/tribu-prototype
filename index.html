@@ -184,7 +184,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Dés de faction custom v11</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Caravane stabilisée v12</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -624,12 +624,16 @@ function drawOneToPool(){
 function startCaravan(handIndex){
  const actor=localViewer(),id=G.players[actor].hand[handIndex];
  if(id===undefined||CARDS[id].name!=='Caravane de commerce'||isDecimated(actor)||caravanState)return;
- discardHandCard(actor,handIndex);
+ const pausedBattle=!!battle;
+ if(pausedBattle){clearInterval(battleTick);clearTimeout(botReactionTimer)}
  const revealed=[];
  for(let k=0;k<caravanRevealCount();k++){const x=drawOneToPool();if(x!==null)revealed.push(x)}
- if(!revealed.length){log('Caravane de commerce : aucune carte disponible.');render();return}
- caravanState={actor,revealed,order:G.players.map((_,k)=>(actor+k)%G.players.length),pick:0};
- log(p(actor).name+' joue Caravane de commerce : '+revealed.length+' carte(s) révélée(s).');
+ if(!revealed.length){if(pausedBattle)resumeBattleTimer();log('Caravane de commerce : aucune carte disponible.');render();return}
+ const currentIndex=G.players[actor].hand.indexOf(id);
+ if(currentIndex<0){if(revealed.length)G.deck.push(...revealed.reverse());if(pausedBattle)resumeBattleTimer();render();return}
+ discardHandCard(actor,currentIndex);
+ caravanState={actor,revealed,order:G.players.map((_,k)=>(actor+k)%G.players.length),pick:0,pausedBattle,pausedBattleSeconds:pausedBattle?battle.seconds:null};
+ log(p(actor).name+' joue Caravane de commerce : '+revealed.length+' carte(s) révélée(s).'+(pausedBattle?' La bataille est mise en pause.':''));
  showCaravanChoice();
 }
 function showCaravanChoice(){
@@ -638,6 +642,7 @@ function showCaravanChoice(){
  const chooser=caravanState.order[caravanState.pick];
  agentModalState={kind:'caravan',chooser};
  openAgentModal('Caravane de commerce',p(chooser).name+' choisit une carte.');
+ const close=$('agentClose');if(close){close.disabled=true;close.textContent='Choix obligatoire'}
  const box=$('agentChoices');
  caravanState.revealed.forEach((id,j)=>{
    const c=CARDS[id],b=document.createElement('button');
@@ -658,9 +663,15 @@ function chooseCaravanCard(j){
 }
 function finishCaravan(){
  if(!caravanState)return;
- // Sécurité si une partie avec moins de joueurs que de cartes laisse un reliquat.
- if(caravanState.revealed.length)G.discard.push(...caravanState.revealed);
- caravanState=null;closeAgentModal();render();
+ const s=caravanState;
+ if(s.revealed.length)G.discard.push(...s.revealed);
+ caravanState=null;closeAgentModal(true);
+ if(s.pausedBattle&&battle){
+   battle.seconds=s.pausedBattleSeconds;
+   resumeBattleTimer();
+   log('Caravane de commerce résolue : la bataille reprend.');
+ }
+ render();
 }
 function noteComplexAnytimeCard(handIndex){
  const v=localViewer(),id=G.players[v].hand[handIndex];if(id===undefined)return;
@@ -888,6 +899,7 @@ function renderShadowBanner(){
 }
 function occupiedCaseCount(i){let n=0;Object.keys(G.b).forEach(r=>{if(G.b[r].owner===i&&G.b[r].units>0)n++});Object.keys(G.sea).forEach(s=>{if((G.sea[s].fleets[i]||0)>0)n++});return n}
 function spendDraw(){
+ if(caravanState)return;
  const viewer=localViewer();
  if(!G||G.players[viewer].bot||G.players[viewer].gold<5||paidDrawState)return;
  G.players[viewer].gold-=5;
@@ -994,9 +1006,14 @@ function playAgentFromHand(handIndex,name){
 }
 function openAgentModal(title,text){
  $('agentTitle').textContent=title;$('agentText').innerHTML=text;$('agentChoices').innerHTML='';
+ const close=$('agentClose');if(close){close.disabled=false;close.textContent='Fermer'}
  $('agentOverlay').classList.remove('hidden');
 }
-function closeAgentModal(){
+function closeAgentModal(force=false){
+ if(!force&&caravanState&&agentModalState&&agentModalState.kind==='caravan'){
+   log('Caravane de commerce : chaque joueur doit choisir une carte avant de continuer.');
+   showCaravanChoice();return;
+ }
  agentModalState=null;$('agentOverlay').classList.add('hidden');$('agentChoices').innerHTML='';
 }
 function addAgentChoice(label,fn,disabled=false){
@@ -1748,6 +1765,7 @@ function advancePriority(resetPasses){
   battle.seconds=15;
 }
 function passPriority(){
+  if(caravanState)return;
   if(!battle)return;
   battle.consecutivePasses++;
   if(battle.consecutivePasses>=battle.priorityOrder.length){
@@ -1759,6 +1777,7 @@ function passPriority(){
   renderBattle();
 }
 function playBattleCard(handIndex){
+  if(caravanState)return;
   if(!battle)return;
   const owner=currentPriorityPlayer();
   const id=G.players[owner].hand[handIndex];
@@ -2126,7 +2145,7 @@ function mount(){
 }
 function toOracle(){if(paidDrawState||isBot()||isDecimated(G.active))return;G.phase='oracleMove';dest=null;picks={};render()}
 function dragonTargets(){return physicalNeighbors(G.dragon)}
-function clickSpot(id){if(dragonSixState||dragonPublicState||dragonCurseState)return;if(inPlaySelected)hideInPlayPreview();if(dragonRichState){if(dragonRichState.targets.includes(id))return destroyRichDragonTarget(id);return;}if(returnState){if(returnRegions(returnState.player).includes(id))return reformAt(id);return;}if(egnoState){if(egnoTargetLegal(id))return resolveEgnobombe(id);return;}if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
+function clickSpot(id){if(caravanState||dragonSixState||dragonPublicState||dragonCurseState)return;if(inPlaySelected)hideInPlayPreview();if(dragonRichState){if(dragonRichState.targets.includes(id))return destroyRichDragonTarget(id);return;}if(returnState){if(returnRegions(returnState.player).includes(id))return reformAt(id);return;}if(egnoState){if(egnoTargetLegal(id))return resolveEgnobombe(id);return;}if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
 function showDragonSixNotice(victim,next){
  clearInterval(dragonSixTick);
  const viewer=localViewer();
@@ -2573,7 +2592,7 @@ function render(){
  if(isViewerHand&&!choiceState&&c.name==='Assassin'){
    d.classList.add('playablePermanent');d.title='Jouer Assassin';d.onclick=()=>startAssassin(handIndex);
  }
- if(isViewerHand&&!choiceState&&c.name==='Caravane de commerce'){
+ if(isViewerHand&&!choiceState&&!caravanState&&c.name==='Caravane de commerce'){
    d.classList.add('playablePermanent');d.title='Jouer Caravane de commerce';d.onclick=()=>startCaravan(handIndex);
  }
  if(isViewerHand&&!choiceState&&c.name==='Divination de l’Oracle'){
