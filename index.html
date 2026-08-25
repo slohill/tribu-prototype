@@ -173,14 +173,34 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
 .battleDie.defenderDie{min-width:29px!important;width:29px!important;height:29px!important;font-size:13px!important}
 
-#battleOverlay .battleBox{width:min(300px,72vw)!important;max-width:300px!important;padding:8px 10px!important;border-radius:8px!important;font-size:11px!important;line-height:1.15!important}
-#battleOverlay .battleBox h2{font-size:15px!important;margin:0 0 4px!important}
-#battleOverlay #battleContent{font-size:10px!important}
-#battleOverlay #battleTimer{font-size:14px!important;margin:4px 0!important}
-#battleOverlay #battleStack{margin:3px 0!important}
-#battleOverlay .stackCard{padding:3px 5px!important;margin:2px 0!important;font-size:10px!important}
-#battleOverlay #battleActions{gap:4px!important;margin-top:4px!important}
-#battleOverlay #battleActions button{min-width:72px!important;padding:4px 6px!important;font-size:10px!important}
+
+/* V17 — vrai encart de bataille posé sur la map */
+.battleBanner{
+  width:min(390px,58%)!important;
+  padding:4px 7px!important;
+  border-radius:7px!important;
+  line-height:1.08!important;
+  font-size:10px!important;
+  top:7px!important;
+  box-shadow:0 3px 10px #0008!important;
+}
+.battleBanner h3{
+  margin:0 0 2px!important;
+  font-size:13px!important;
+}
+.battleBanner .battleScore{
+  gap:6px!important;
+  font-size:10px!important;
+}
+.battleBanner .battleDetail{
+  margin-top:2px!important;
+  font-size:9px!important;
+  line-height:1.08!important;
+}
+@media(max-width:900px){
+  .battleBanner{width:min(350px,62%)!important;font-size:9px!important}
+  .battleBanner h3{font-size:12px!important}
+}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -193,7 +213,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Encart bataille map compact v16</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Encart bataille + mer corrigés v17</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2095,7 +2115,7 @@ function commitMovement(n,seaDefender){
 function openSeaChoice(n){
  battle={kind:'seaChoice',target:dest,total:n};
  const src=$('sources');if(src)src.innerHTML='';
- const hint=$('hint');if(hint)hint.textContent='Choisissez uniquement : Naviguer ou attaquer une flotte.';
+ const hint=$('hint');if(hint)hint.textContent='Choisissez uniquement : Naviguer ou attaquer un joueur.';
  $('battlePanel').classList.remove('hidden');
  $('battleSideInfo').innerHTML='<b>Aire maritime '+dest+'</b><br>Des flottes adverses sont présentes.';
  $('priorityInfo').textContent='Choisissez : naviguer ou attaquer une flotte.';
@@ -2643,11 +2663,16 @@ function render(){
  if(isBot()){$('status').innerHTML+='<div class="botNotice">🤖 '+pl.name+' joue automatiquement — '+G.phase+'</div>';}$('recruitBox').classList.toggle('hidden',G.phase!=='recruit');$('playBox').classList.toggle('hidden',G.phase!=='play');$('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));
  if(G.phase==='oracleMove')$('oracleHint').textContent='Cliquez sur une case violette pour déplacer obligatoirement le Dragon.';if(G.phase==='oracleRoll')$('oracleHint').textContent='Dragon placé sur '+G.dragon+'. Lancez le dé.';
  const src=$('sources');src.innerHTML='';
+ if(battle&&battle.kind==='seaChoice')src.style.display='none';else src.style.display='';
  if(G.phase==='play'&&buildingMode){
    $('hint').textContent='Placement de '+buildingMode.type+' : cliquez sur une région verte.';
- }else if(G.phase==='play'&&dest&&!(battle&&battle.kind==='seaChoice')){
+ }else if(G.phase==='play'&&dest&&!isSea(dest)&&!(battle&&battle.kind==='seaChoice')){
    $('hint').innerHTML='Destination <b>'+dest+'</b> — cliquez sur plusieurs sources jaunes si besoin.';
    legalSources(dest).forEach(s=>{const d=document.createElement('div');d.className='source';d.innerHTML='<button title="Clic : +1 / maintenir sur la région : tout">'+s+'</button><button>−</button><span>'+(picks[s]||0)+'/'+movableCount(s)+'</span><button>+</button><button>Tout</button>';const bs=d.querySelectorAll('button');bs[0].onclick=()=>adjust(s,1);bs[1].onclick=()=>adjust(s,-1);bs[2].onclick=()=>adjust(s,1);bs[3].onclick=()=>pickAllFromSource(s);src.appendChild(d)})
+ }else if(G.phase==='play'&&dest&&isSea(dest)){
+   $('hint').textContent=battle&&battle.kind==='seaChoice'
+     ? 'Choisissez : Naviguer ou attaquer un joueur.'
+     : 'Déplacement maritime : sélectionnez vos unités directement sur la map.';
  }else if(G.phase==='play')$('hint').textContent='Cliquez sur la destination.';
  $('buildModeInfo').classList.toggle('hidden',!buildingMode);
  if(buildingMode){
