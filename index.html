@@ -206,8 +206,6 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .oracleMini{height:100%;width:82px;min-width:82px;padding:3px 4px;border:2px solid #727d77;border-radius:7px;background:#18201d;color:#d4d8d6;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;box-sizing:border-box}
 .oracleMini small{font-size:7px;line-height:1;opacity:.85}.oracleMini b{font-size:9px;line-height:1.05;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 
-#buyDrawPermanentHost{position:relative;z-index:90;width:100%;display:flex;justify-content:center;flex:0 0 auto;margin:4px 0}
-#buyDrawPermanent{display:block!important;visibility:visible!important;opacity:1!important;width:calc(100% - 8px);padding:5px 4px;font-size:10px;font-weight:900}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -220,7 +218,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Bouton 5 Or corrigé v21</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Colonne gauche stable v22</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2662,20 +2660,13 @@ function renderPlayerRail(){
    rail.appendChild(card);
  });
 
- // IMPORTANT : la colonne vient d'être entièrement reconstruite.
- // Le bouton 5 Or doit donc être recréé ici, à chaque fois.
- const host=document.createElement('div');
- host.id='buyDrawPermanentHost';
+ renderInPlay(localViewer());
  const buy=document.createElement('button');
- buy.id='buyDrawPermanent';
- buy.className='railBuyDraw';
- buy.textContent='🃏 5 Or : une carte';
+ buy.id='buyDraw';buy.className='railBuyDraw';buy.textContent='🃏 5 Or : une carte';
  buy.onclick=spendDraw;
  const viewer=localViewer();
- buy.disabled=isDecimated(viewer)||G.players[viewer].bot||G.players[viewer].gold<5||
-              !!paidDrawState||!!dragonRichState||!!dragonCurseState;
- host.appendChild(buy);
- rail.appendChild(host);
+ buy.disabled=isDecimated(viewer)||G.players[viewer].bot||G.players[viewer].gold<5||!!paidDrawState||!!dragonRichState||!!dragonCurseState;
+ rail.appendChild(buy);
 }
 let inPlaySelected=null,inPlayHoldTimer=null,inPlayLongTriggered=false;
 
@@ -2765,11 +2756,6 @@ function renderInPlay(i){
  if(inPlaySelected&&!card.querySelector('[data-key="'+inPlaySelected+'"]'))hideInPlayPreview();
  rail.appendChild(card);
 
- // Pioche payante désormais dans la colonne de gauche, sous EN JEU.
- const buy=document.createElement('button');
- buy.id='buyDraw';buy.className='railBuyDraw';buy.textContent='🃏 5 Or : une carte';
- buy.onclick=spendDraw;
- rail.appendChild(buy);
 }
 
 function renderHandBattleState(){
@@ -2945,9 +2931,7 @@ function render(){
  }
  h.appendChild(d)
 });
- renderInPlay(localViewer());
- const railBuy=$('buyDrawPermanent');
- if(railBuy)railBuy.textContent='🃏 5 Or : une carte';
+ const railBuy=$('buyDraw');
  if(railBuy)railBuy.disabled=isDecimated(buyViewer)||G.players[buyViewer].bot||G.players[buyViewer].gold<5||!!paidDrawState||!!dragonRichState||!!dragonCurseState;
  renderHandBattleState();
  if(portalMode)renderPortalBanner();else if(dragonRichState)renderRichDragonBanner();else if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();else clearTopBanner();
