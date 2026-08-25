@@ -172,6 +172,14 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .playerPeek{z-index:145!important}
 
 .battleDie.defenderDie{min-width:29px!important;width:29px!important;height:29px!important;font-size:13px!important}
+
+#battlePanel{font-size:11px!important;padding:5px!important;line-height:1.15!important}
+#battlePanel .note{padding:4px!important;margin-top:3px!important;font-size:10px!important}
+#battlePanel .timer{font-size:14px!important;margin:3px 0!important}
+#battlePanel .battleActions{gap:3px!important}
+#battlePanel .battleActions button{min-width:70px!important;padding:4px 6px!important;font-size:10px!important}
+#battlePanel .stackList{margin:3px 0!important}
+#battlePanel .stackCard{padding:3px 5px!important;margin:2px 0!important;font-size:10px!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -184,7 +192,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Caravane stabilisée v12</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Batailles + Bots + Oracle v13</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1400,6 +1408,22 @@ function botPlayUsefulCard(){
    return true;
  }
 
+ // Les Cités sont jouées dès qu'une région valide est disponible.
+ for(const cityName of ['Icenia, la cité blanche','Sundo, cité du soleil']){
+   idx=hand.findIndex(id=>CARDS[id].name===cityName);
+   if(idx>=0){
+     const wanted=cityName==='Icenia, la cité blanche'?'e':'d';
+     const regs=Object.keys(G.b).filter(r=>G.b[r].owner===G.active&&!hasBuilding(r)&&currentTerrain(r)===wanted);
+     if(regs.length){
+       regs.sort((a,b)=>G.b[b].units-G.b[a].units);
+       const r=regs[0],id=hand.splice(idx,1)[0];
+       p().inPlay.push(id);G.b[r].building={type:cityName,cardId:id,owner:G.active};
+       log(p().name+' (bot) construit '+cityName+' sur '+r+'.');
+       return true;
+     }
+   }
+ }
+
  // Une Forteresse sur sa région la plus peuplée sans bâtiment.
  idx=hand.findIndex(id=>CARDS[id].name==='Forteresse');
  if(idx>=0){
@@ -1411,6 +1435,63 @@ function botPlayUsefulCard(){
      log(p().name+' (bot) construit une Forteresse sur '+r+'.');
      return true;
    }
+ }
+ return false;
+}
+function botUseAgentOrAssassin(){
+ if(!isBot()||G.phase!=='play')return false;
+ const actor=G.active;agentDefaults(actor);
+
+ // Espion : observe une main adverse si un Espion inutilisé est disponible.
+ let ai=availableAgentIndex(actor,'Espion');
+ if(ai>=0){
+   const targets=opponentIndexes(actor).filter(j=>G.players[j].hand.length);
+   if(targets.length){
+     const t=targets[Math.floor(Math.random()*targets.length)],hand=G.players[t].hand;
+     const id=hand[Math.floor(Math.random()*hand.length)];
+     markAgentUsed(actor,ai);
+     G.players[actor].seenCards.push({target:t,cardId:id,turn:G.turn,active:G.active});
+     log(p(actor).name+' (bot) utilise Espion sur '+p(t).name+'.');
+     return true;
+   }
+ }
+
+ // Voleur : tente un vol aléatoire.
+ ai=availableAgentIndex(actor,'Voleur');
+ if(ai>=0){
+   const targets=opponentIndexes(actor).filter(j=>G.players[j].hand.length||objectCardsInPlay(j).length);
+   if(targets.length){
+     const t=targets[Math.floor(Math.random()*targets.length)];
+     markAgentUsed(actor,ai);
+     const roll=1+Math.floor(Math.random()*6);
+     if(roll===1){
+       const id=G.players[actor].inPlay.splice(ai,1)[0];
+       if(G.players[actor].inPlayUID)G.players[actor].inPlayUID.splice(ai,1);
+       G.discard.push(id);log(p(actor).name+' (bot) perd son Voleur sur un 1.');
+     }else if(roll>=5){
+       if(G.players[t].hand.length){
+         const j=Math.floor(Math.random()*G.players[t].hand.length),id=G.players[t].hand.splice(j,1)[0];
+         G.players[actor].hand.push(id);log(p(actor).name+' (bot) vole une carte à '+p(t).name+'.');
+       }
+     }else log(p(actor).name+' (bot) utilise Voleur sans succès.');
+     return true;
+   }
+ }
+
+ // Assassin : cible un Agent adverse s'il en existe un.
+ const assassinIdx=G.players[actor].hand.findIndex(id=>CARDS[id].name==='Assassin');
+ const targets=assassinTargets(actor);
+ if(assassinIdx>=0&&targets.length){
+   const target=targets[Math.floor(Math.random()*targets.length)];
+   const aid=G.players[actor].hand.splice(assassinIdx,1)[0];G.discard.push(aid);
+   const roll=1+Math.floor(Math.random()*6);
+   if(roll>=4){
+     const pl=G.players[target.owner],id=pl.inPlay.splice(target.index,1)[0];
+     if(pl.inPlayUID)pl.inPlayUID.splice(target.index,1);
+     G.discard.push(id);
+     log(p(actor).name+' (bot) joue Assassin et élimine '+target.name+' de '+p(target.owner).name+'.');
+   }else log(p(actor).name+' (bot) joue Assassin mais échoue.');
+   return true;
  }
  return false;
 }
@@ -1437,7 +1518,12 @@ function botAdvance(){
 
  if(G.phase==='play'){
    if(botActionsThisTurn===0)setMovable();
-   if(botActionsThisTurn===0){botRecruitSome();botPlayUsefulCard()}
+   if(botActionsThisTurn===0){
+     botRecruitSome();
+     // Peut poser plusieurs cartes utiles au lieu de s'arrêter au premier permanent.
+     for(let k=0;k<3;k++){if(!botPlayUsefulCard())break}
+     botUseAgentOrAssassin();
+   }
    const {attacks,moves}=botCandidates();
    const choice=attacks[0] || moves[0] || null;
 
@@ -1647,7 +1733,6 @@ function battleCardLegality(cardId, owner){
 
   if(name==='Mur de pique'){
     if(owner!==battle.defender) return {ok:false,reason:'Seul le défenseur peut jouer Mur de pique.'};
-    if(battle.kind!=='land') return {ok:false,reason:'Cible une région attaquée : pas de bataille maritime.'};
     return {ok:true,forcedSide:'defender',reason:'+4 Défense.'};
   }
 
@@ -1855,6 +1940,11 @@ function queueBotReaction(){
  const priorityRef=priority;
  botReactionTimer=setTimeout(()=>{
    if(!battle || battle!==battleRef || currentPriorityPlayer()!==priorityRef)return;
+   if(priorityRef===battle.attacker&&battle.kind==='land'&&playerHasTrebuchets(priorityRef)&&trebuchetBonus()>0&&!battle.trebuchetsUsed){
+     battle.trebuchetsUsed=true;
+     log(p(priorityRef).name+' (bot) active Plan des trébuchets : +'+trebuchetBonus()+' Attaque.');
+     renderBattle();render();
+   }
    const legal=tacticalIndexes(priorityRef)
      .filter(x=>battleCardLegality(x.id,priorityRef).ok)
      .filter(x=>['Catapultes','Mur de pique','Pluie de flèches','Pyrodontes de guerre','Montures','Balistes'].includes(CARDS[x.id].name));
@@ -2003,6 +2093,8 @@ function commitMovement(n,seaDefender){
 }
 function openSeaChoice(n){
  battle={kind:'seaChoice',target:dest,total:n};
+ const src=$('sources');if(src)src.innerHTML='';
+ const hint=$('hint');if(hint)hint.textContent='Choisissez uniquement : Naviguer ou attaquer une flotte.';
  $('battlePanel').classList.remove('hidden');
  $('battleSideInfo').innerHTML='<b>Aire maritime '+dest+'</b><br>Des flottes adverses sont présentes.';
  $('priorityInfo').textContent='Choisissez : naviguer ou attaquer une flotte.';
@@ -2143,7 +2235,11 @@ function mount(){
  log('Montures : toutes vos unités gagnent +1 point de déplacement pour ce tour.');
  render();
 }
-function toOracle(){if(paidDrawState||isBot()||isDecimated(G.active))return;G.phase='oracleMove';dest=null;picks={};render()}
+function toOracle(){
+ if(battle||caravanState||paidDrawState||isBot()||isDecimated(G.active))return;
+ if(!confirm('Êtes-vous sûr de vouloir passer à la Phase Oracle ?'))return;
+ G.phase='oracleMove';dest=null;picks={};render();
+}
 function dragonTargets(){return physicalNeighbors(G.dragon)}
 function clickSpot(id){if(caravanState||dragonSixState||dragonPublicState||dragonCurseState)return;if(inPlaySelected)hideInPlayPreview();if(dragonRichState){if(dragonRichState.targets.includes(id))return destroyRichDragonTarget(id);return;}if(returnState){if(returnRegions(returnState.player).includes(id))return reformAt(id);return;}if(egnoState){if(egnoTargetLegal(id))return resolveEgnobombe(id);return;}if(shadowState){if(shadowState.stage==='gather'&&!isSea(id)&&G.b[id].owner===shadowState.player)return adjustShadow(id,1);if(shadowState.stage==='target'&&shadowTargetLegal(id))return chooseShadowTarget(id);return;}if(portalMode){if(canPortalRegion(id))return choosePortalRegion(id);return;}if(isBot()||paidDrawState||goldReaction)return;if(buildingMode){if(canPlaceBuilding(id))return placeBuilding(id);return;}if(G.phase==='recruit'&&!isSea(id))return recruitAt(id);if(G.phase==='play'){if(dest&&legalSources(dest).includes(id))return adjust(id,1);return chooseDest(id)}if(G.phase==='oracleMove'&&dragonTargets().includes(id)){G.dragon=id;G.phase='oracleRoll';log(p().name+' place le Dragon sur '+id+'.');render()}}
 function showDragonSixNotice(victim,next){
@@ -2267,7 +2363,9 @@ function renderMap(){
  if(isPvpBattle){
    const pair=document.createElement('span');pair.className='battleDicePair';
    const ad=document.createElement('span');ad.className='battleDie attackerDie';ad.style.backgroundImage='url("'+factionDieImage(battle.attacker)+'")';ad.textContent=battle.attackUnits;ad.title=p(battle.attacker).name+' : '+battle.attackUnits+' unité(s) attaquante(s)';
-   const dd=document.createElement('span');dd.className='battleDie defenderDie';dd.style.backgroundImage='url("'+factionDieImage(battle.defender)+'")';dd.textContent=battle.defOriginalUnits;dd.title=p(battle.defender).name+' : '+battle.defOriginalUnits+' unité(s) en défense';
+   const dd=document.createElement('span');dd.className='battleDie defenderDie';dd.style.backgroundImage='url("'+factionDieImage(battle.defender)+'")';
+   const defUnitValue=battle.defOriginalUnits*FACTIONS[p(battle.defender).faction].def+wallCount(battle.defender);
+   dd.textContent=defUnitValue;dd.title=p(battle.defender).name+' : '+defUnitValue+' Défense affichée';
    pair.appendChild(ad);pair.appendChild(dd);b.appendChild(pair);
  }
  if(!isSea(id)&&G.b[id].building&&G.b[id].building.type==='Portail'){
@@ -2510,7 +2608,7 @@ function render(){
    '<div style="margin-top:7px"><span class="badge">Phase : '+G.phase+'</span></div>'+
  '</div>';
  $('startTurn').classList.toggle('hidden',G.phase!=='start'||isDecimated(G.active));['draw','harvest','recruit'].forEach(id=>$(id).disabled=isBot());
- $('toOracle').disabled=isBot()||!!paidDrawState||!!goldReaction||!!dragonRichState||!!dragonCurseState;
+ $('toOracle').disabled=!!battle||isBot()||!!paidDrawState||!!goldReaction||!!dragonRichState||!!dragonCurseState||!!caravanState;
  const buyViewer=localViewer();
  $('draw').disabled=isBot()||!!paidDrawState||!!goldReaction;
  $('harvest').disabled=isBot()||!!paidDrawState||!!goldReaction;
@@ -2540,7 +2638,7 @@ function render(){
  const src=$('sources');src.innerHTML='';
  if(G.phase==='play'&&buildingMode){
    $('hint').textContent='Placement de '+buildingMode.type+' : cliquez sur une région verte.';
- }else if(G.phase==='play'&&dest){
+ }else if(G.phase==='play'&&dest&&!(battle&&battle.kind==='seaChoice')){
    $('hint').innerHTML='Destination <b>'+dest+'</b> — cliquez sur plusieurs sources jaunes si besoin.';
    legalSources(dest).forEach(s=>{const d=document.createElement('div');d.className='source';d.innerHTML='<button title="Clic : +1 / maintenir sur la région : tout">'+s+'</button><button>−</button><span>'+(picks[s]||0)+'/'+movableCount(s)+'</span><button>+</button><button>Tout</button>';const bs=d.querySelectorAll('button');bs[0].onclick=()=>adjust(s,1);bs[1].onclick=()=>adjust(s,-1);bs[2].onclick=()=>adjust(s,1);bs[3].onclick=()=>pickAllFromSource(s);src.appendChild(d)})
  }else if(G.phase==='play')$('hint').textContent='Cliquez sur la destination.';
