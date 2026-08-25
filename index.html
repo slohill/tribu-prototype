@@ -220,10 +220,9 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Bouton 5 Or persistant v20</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Bouton 5 Or corrigé v21</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
-<div class="playerRail" id="playerRail">
-<div id="buyDrawPermanentHost"><button id="buyDrawPermanent" class="railBuyDraw">🃏 5 Or : une carte</button></div></div>
+<div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
 
   <div class="map" id="map">
@@ -2662,6 +2661,21 @@ function renderPlayerRail(){
    card.onclick=()=>togglePlayerPeek(i);
    rail.appendChild(card);
  });
+
+ // IMPORTANT : la colonne vient d'être entièrement reconstruite.
+ // Le bouton 5 Or doit donc être recréé ici, à chaque fois.
+ const host=document.createElement('div');
+ host.id='buyDrawPermanentHost';
+ const buy=document.createElement('button');
+ buy.id='buyDrawPermanent';
+ buy.className='railBuyDraw';
+ buy.textContent='🃏 5 Or : une carte';
+ buy.onclick=spendDraw;
+ const viewer=localViewer();
+ buy.disabled=isDecimated(viewer)||G.players[viewer].bot||G.players[viewer].gold<5||
+              !!paidDrawState||!!dragonRichState||!!dragonCurseState;
+ host.appendChild(buy);
+ rail.appendChild(host);
 }
 let inPlaySelected=null,inPlayHoldTimer=null,inPlayLongTriggered=false;
 
@@ -2947,5 +2961,5 @@ document.addEventListener('pointerdown',e=>{
  hideInPlayPreview();
  renderInPlaySelection();
 });
-$('oracleNoticePass').onclick=finishOracleNotice;$('dragonSixPass').onclick=finishDragonSixNotice;$('dragonPublicPass').onclick=passDragonPublic;$('dragonCurseContinue').onclick=continueDragonCurse;$('discardPile').onclick=openDiscard;$('deckPile').onclick=()=>{};$('discardClose').onclick=closeDiscard;$('restart').onclick=init;$('agentClose').onclick=closeAgentModal;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('endRecruit').onclick=beginPlay;$('buyDrawPermanent').onclick=spendDraw;$('toOracle').onclick=toOracle;$('choiceConfirm').onclick=confirmCouncil;$('roll').onclick=roll;
+$('oracleNoticePass').onclick=finishOracleNotice;$('dragonSixPass').onclick=finishDragonSixNotice;$('dragonPublicPass').onclick=passDragonPublic;$('dragonCurseContinue').onclick=continueDragonCurse;$('discardPile').onclick=openDiscard;$('deckPile').onclick=()=>{};$('discardClose').onclick=closeDiscard;$('restart').onclick=init;$('agentClose').onclick=closeAgentModal;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('endRecruit').onclick=beginPlay;$('toOracle').onclick=toOracle;$('choiceConfirm').onclick=confirmCouncil;$('roll').onclick=roll;
 </script></body></html>
