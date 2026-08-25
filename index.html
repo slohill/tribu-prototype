@@ -173,13 +173,14 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
 .battleDie.defenderDie{min-width:29px!important;width:29px!important;height:29px!important;font-size:13px!important}
 
-#battlePanel{font-size:11px!important;padding:5px!important;line-height:1.15!important}
-#battlePanel .note{padding:4px!important;margin-top:3px!important;font-size:10px!important}
-#battlePanel .timer{font-size:14px!important;margin:3px 0!important}
-#battlePanel .battleActions{gap:3px!important}
-#battlePanel .battleActions button{min-width:70px!important;padding:4px 6px!important;font-size:10px!important}
-#battlePanel .stackList{margin:3px 0!important}
-#battlePanel .stackCard{padding:3px 5px!important;margin:2px 0!important;font-size:10px!important}
+#battleOverlay .battleBox{width:min(300px,72vw)!important;max-width:300px!important;padding:8px 10px!important;border-radius:8px!important;font-size:11px!important;line-height:1.15!important}
+#battleOverlay .battleBox h2{font-size:15px!important;margin:0 0 4px!important}
+#battleOverlay #battleContent{font-size:10px!important}
+#battleOverlay #battleTimer{font-size:14px!important;margin:4px 0!important}
+#battleOverlay #battleStack{margin:3px 0!important}
+#battleOverlay .stackCard{padding:3px 5px!important;margin:2px 0!important;font-size:10px!important}
+#battleOverlay #battleActions{gap:4px!important;margin-top:4px!important}
+#battleOverlay #battleActions button{min-width:72px!important;padding:4px 6px!important;font-size:10px!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -192,7 +193,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Oracle double clic v15</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Encart bataille map compact v16</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
