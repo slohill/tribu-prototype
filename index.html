@@ -213,6 +213,12 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .divinationChoices{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:10px}
 .divinationChoices button{min-width:150px;flex:1;padding:7px 8px}
 .divinationChoices .oraclePick{min-width:125px;font-size:11px}
+
+.cityTerrainOverlay{position:absolute;z-index:7;pointer-events:none;transform:translate(-50%,-50%);width:9.2%;aspect-ratio:1/1;border-radius:48% 52% 45% 55%;box-sizing:border-box}
+.cityTerrainOverlay.snow{background:radial-gradient(circle,rgba(245,252,255,.86) 0 36%,rgba(211,235,246,.7) 58%,rgba(175,213,230,.2) 76%,transparent 83%);border:2px solid rgba(235,250,255,.9);box-shadow:0 0 8px rgba(220,244,255,.75)}
+.cityTerrainOverlay.desert{background:radial-gradient(circle,rgba(235,165,82,.78) 0 38%,rgba(201,120,48,.6) 60%,rgba(151,83,30,.16) 77%,transparent 84%);border:2px solid rgba(242,181,100,.9);box-shadow:0 0 8px rgba(211,128,55,.68)}
+.cityTerrainOverlay::after{content:'';position:absolute;inset:10%;border-radius:inherit;border:1px dashed rgba(255,255,255,.42)}
+.spot,.seaSpot{z-index:12}.buildingToken,.dragonToken{z-index:25}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -225,7 +231,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Divination de l’Oracle v26</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Cités et terrains visuels v27</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2994,8 +3000,25 @@ function openDiscard(){
 }
 function closeDiscard(){$('discardOverlay').classList.add('hidden')}
 
+function renderCityTerrainOverlays(){
+ const map=$('map');if(!map)return;
+ map.querySelectorAll('.cityTerrainOverlay').forEach(el=>el.remove());
+ Object.keys(G.b).forEach(r=>{
+   const city=cityAt(r);if(!city)return;
+   let kind=null;
+   if(city.type==='Icenia, la cité blanche')kind='snow';
+   if(city.type==='Sundo, cité du soleil')kind='desert';
+   if(!kind)return;
+   const spot=R[r];if(!spot)return;
+   const el=document.createElement('div');
+   el.className='cityTerrainOverlay '+kind;
+   el.style.left=spot[2]+'%';el.style.top=spot[3]+'%';
+   map.appendChild(el);
+ });
+}
 function render(){
  applyOracleMapVisual();
+ renderCityTerrainOverlays();
  if(!G)return;
  const dc=$('deckCount'),xc=$('discardCount');if(dc)dc.textContent=G.deck.length;if(xc)xc.textContent=G.discard.length;
  const oa=$('oracleActiveName'),on=$('oracleNextName');if(oa)oa.textContent=oracleName();const nid=nextOracle();if(on)on.textContent=nid===null?'—':ORACLES[nid].name;
