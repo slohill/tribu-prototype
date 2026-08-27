@@ -261,7 +261,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Dés couleurs uniques v42</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Dés couleur des encarts v43</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2812,22 +2812,13 @@ function factionDieImage(owner){
  const arr=FACTION_DICE[f.name]||FACTION_DICE['Reptones']||FACTION_DICE['Griffes-Blanches'];
  return arr[owner%arr.length];
 }
-function playerDieFilter(owner){
- // Les PNG gardent leur symbole de faction, mais leur fond est recolorisé par joueur.
- // Joueur 1 rose = image originale Griffes-Blanches ; les autres passent par hue-rotate.
- const filters=[
-  'none',                         // rose
-  'hue-rotate(78deg) saturate(1.35) brightness(1.08)',  // jaune
-  'hue-rotate(145deg) saturate(1.15) brightness(1.05)', // vert
-  'hue-rotate(215deg) saturate(1.15) brightness(1.08)', // bleu
-  'hue-rotate(325deg) saturate(1.35) brightness(1.00)'  // rouge
- ];
- return filters[owner]||'none';
-}
+
 function die(owner,count,region=null){
  const d=document.createElement('span');d.className='die';
  d.style.backgroundImage='url("'+factionDieImage(owner)+'")';
- d.style.filter=playerDieFilter(owner);
+ d.style.backgroundColor=COLORS[owner];
+ d.style.backgroundBlendMode='luminosity';
+ d.style.filter='none';
  const defending=region!==null&&owner!==G.active;
  const y=FACTIONS[G.players[owner].faction].name==='Yonkaïs'&&defending;
  const walls=(region!==null&&owner!==G.active)?wallCount(owner):0;
