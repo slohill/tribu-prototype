@@ -242,7 +242,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Bataille épique règle PDF v34</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Givre Mer de glace v36</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1490,7 +1490,7 @@ function botAttackBonus(i,target){
    if(c.name==='Pluie de flèches')best=Math.max(best,3);
    if(c.name==='Montures')best=Math.max(best,4);
    if(c.name==='Balistes')best=Math.max(best,2);
-   if(c.name==='Pyrodontes de guerre' && !isSea(target) && R[target][1]==='t')best=Math.max(best,5);
+   if(c.name==='Pyrodontes de guerre' && !isSea(target) && R[target][1]==='t' && currentTerrain(target)==='t')best=Math.max(best,5);
  });
  return best;
 }
@@ -1948,7 +1948,7 @@ function battleCardLegality(cardId, owner){
   if(name==='Pyrodontes de guerre'){
     if(owner!==battle.attacker) return {ok:false,reason:'Seul l’attaquant peut jouer Pyrodontes.'};
     if(battle.kind!=='land') return {ok:false,reason:'Uniquement en bataille terrestre.'};
-    if(R[battle.target][1]!=='t') return {ok:false,reason:'La région de bataille doit être tempérée.'};
+    if(R[battle.target][1]!=='t'||currentTerrain(battle.target)!=='t') return {ok:false,reason:'La région doit être naturellement tempérée et être actuellement tempérée.'};
     return {ok:true,forcedSide:'attacker',reason:'+5 Attaque uniquement.'};
   }
 
@@ -2011,7 +2011,7 @@ function battleBonusFor(card,side){
   if(name==='Mur de pique') return side==='defender'?4:0;
   if(name==='Pluie de flèches') return 3;
   if(name==='Pyrodontes de guerre'){
-    return side==='attacker' && battle.kind==='land' && R[battle.target][1]==='t' ? 5 : 0;
+    return side==='attacker' && battle.kind==='land' && R[battle.target][1]==='t' && currentTerrain(battle.target)==='t' ? 5 : 0;
   }
   if(name==='Montures') return side==='attacker'?4:0;
   if(name==='Balistes') return 0;
@@ -2544,7 +2544,16 @@ function destroyUnitsOnRegion(r){
  if(isSea(r))return;
  const c=G.b[r];c.units=0;c.owner=null;c.hostile=c.originalHostile;
 }
-function destroySeaUnits(s){if(G.sea[s])G.sea[s].fleets={}}
+function destroySeaUnits(s,oracleName=null){
+ if(!G.sea[s])return;
+ if(!oracleName){G.sea[s].fleets={};return}
+ const fleets=G.sea[s].fleets||{};
+ Object.keys(fleets).forEach(k=>{
+   const player=Number(k);
+   if(!playerImmuneToOracle(player,oracleName))delete fleets[k];
+   else log(p(player).name+' est immunisé à '+oracleName+' : sa flotte est épargnée en '+s+'.');
+ });
+}
 
 function factionName(i){return FACTIONS[G.players[i].faction].name}
 function playerImmuneToOracle(i,name){
@@ -2617,12 +2626,12 @@ function activateOracle(afterResolution=null,activator=G.active){
  showOracleNotice(o.name,()=>{
    if(o.name==='Canicule'||o.name==='Vague de froid'){oracleClimateVisual=o.name;oraclePendingNormalMap=false;applyOracleMapVisual();render();completeOracleResolution();return}
    if(o.name==='Givre mortel'){
-     destroySeaUnits('U');
+     destroySeaUnits('U','Givre mortel');
      if(prev==='Canicule'){log('Givre mortel est sans effet après Canicule.');finishOracleResolution();render();completeOracleResolution();return}
      beginOracleSacrifices('e','Givre mortel','Icenia, la cité blanche');return;
    }
    if(o.name==='Tempête de sable'){
-     destroySeaUnits('Z');
+     
      if(prev==='Vague de froid'){log('Tempête de sable est sans effet après Vague de froid.');finishOracleResolution();render();completeOracleResolution();return}
      beginOracleSacrifices('d','Tempête de sable','Sundo, cité du soleil');return;
    }
