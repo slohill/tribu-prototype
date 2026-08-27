@@ -86,7 +86,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .goldReactionBox{border:2px solid #d7b84b;background:#332f18;border-radius:8px;padding:8px;margin-top:7px;text-align:center}
 .goldReactionBox.hidden{display:none}.goldReactionBox button{margin:4px;padding:5px 8px}
 .portalIcon{position:absolute;width:24px;height:31px;object-fit:contain;left:50%;top:50%;transform:translate(-50%,-50%);z-index:21;filter:drop-shadow(0 1px 2px #000);pointer-events:none}
-.portalIcon.withUnits{left:calc(50% + 24px);top:50%;transform:translate(-50%,-50%)}
+.portalIcon.withUnits{left:calc(50% + 18px);top:50%;transform:translate(-50%,-50%)}
 .handHeaderRow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .handHeaderRow .handOwner{flex:0 1 auto}
 .handBuyDraw{width:auto!important;padding:5px 9px!important;font-size:11px!important;font-weight:900!important;border:2px solid #46e37a!important;background:#183a24!important;color:#eaffef!important;border-radius:7px;box-shadow:0 0 8px #46e37a55}
@@ -233,6 +233,11 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
 .portalIcon,.buildingIcon,.fortressIcon,.cityIcon{z-index:60!important}
 .dragon,.dragonIcon,.dragonToken,#dragonToken{z-index:90!important}
+
+.fortressIcon.withUnits{left:14px!important}
+/* Affichage : dés < bâtiments/portail < dragon */
+.portalIcon,.buildingIcon,.fortressIcon,.cityIcon{z-index:80!important}
+.dragon,.dragonIcon,.dragonToken,#dragonToken,.dragonMarker,[class*="dragon"]{z-index:120!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -245,7 +250,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Nouveaux pions bâtiments v37</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Superposition pions v38</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
