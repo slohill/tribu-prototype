@@ -261,7 +261,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Dés couleur des encarts v43</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Dés transparents couleurs v44</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -2813,12 +2813,22 @@ function factionDieImage(owner){
  return arr[owner%arr.length];
 }
 
+function playerDieColorFilter(owner){
+ const filters=[
+  'none',
+  'hue-rotate(62deg) saturate(2.1) brightness(1.12)',
+  'hue-rotate(118deg) saturate(.82) brightness(1.12)',
+  'hue-rotate(188deg) saturate(.78) brightness(1.18)',
+  'hue-rotate(310deg) saturate(2.05) brightness(.98)'
+ ];
+ return filters[owner]||'none';
+}
 function die(owner,count,region=null){
  const d=document.createElement('span');d.className='die';
  d.style.backgroundImage='url("'+factionDieImage(owner)+'")';
- d.style.backgroundColor=COLORS[owner];
- d.style.backgroundBlendMode='luminosity';
- d.style.filter='none';
+ d.style.backgroundColor='transparent';
+ d.style.backgroundBlendMode='normal';
+ d.style.filter=playerDieColorFilter(owner);
  const defending=region!==null&&owner!==G.active;
  const y=FACTIONS[G.players[owner].faction].name==='Yonkaïs'&&defending;
  const walls=(region!==null&&owner!==G.active)?wallCount(owner):0;
