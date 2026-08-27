@@ -242,7 +242,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Points de victoire v32 — dé Griffes rose FIX</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Bataille épique règle PDF v34</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1079,7 +1079,7 @@ function chooseShadowTarget(r){
  if(parent)battleStack.push({battle:parent,seconds:s.parentBattleSeconds||15});
  const defender=c.hostile?null:c.owner;
  const defBase=(c.hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(r);
- battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,hostile:c.hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true,shadowMove:(s.carriedMove||[]).slice()};
+ battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:c.hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true,shadowMove:(s.carriedMove||[]).slice()};
  log('Section de l’ombre ouvre une nouvelle bataille en '+r+' : '+n+' Att contre '+defBase+' Déf.');startReactionWindow();render();
 }
 function resumeBattleTimer(){
@@ -1148,8 +1148,13 @@ function playCouncil(handIndex){
  if(choiceState)return;
  const found=cardFromViewerHand(handIndex,'Conseil de guerre');if(!found)return;
  const actor=found.viewer;
+ const battleCouncil=!!battle;
+ if(battleCouncil){
+   if(currentPriorityPlayer()!==actor)return;
+   clearInterval(battleTick);clearTimeout(botReactionTimer);
+ }
  G.players[actor].hand.splice(handIndex,1);G.discard.push(found.id);draw(actor,2);
- choiceState={kind:'council',selected:[],player:actor};
+ choiceState={kind:'council',selected:[],player:actor,battleCouncil,battleRef:battle,battleSeconds:battle?battle.seconds:null};
  $('choiceTitle').textContent='Conseil de guerre';
  $('choiceText').textContent='Vous avez pioché 2 cartes. Choisissez exactement 2 cartes de votre main à défausser.';
  $('choiceOverlay').classList.remove('hidden');renderCouncilChoices();
@@ -1174,7 +1179,17 @@ function confirmCouncil(){
    const id=G.players[actor].hand.splice(idx,1)[0];if(id===undefined)return;
    names.push(CARDS[id].name);G.discard.push(id);
  });
- closeChoice();log(p(actor).name+' termine Conseil de guerre et défausse '+names.join(' et ')+'.');render();
+ const wasBattle=choiceState.battleCouncil&&choiceState.battleRef===battle;
+ const savedSeconds=choiceState.battleSeconds;
+ closeChoice();log(p(actor).name+' termine Conseil de guerre et défausse '+names.join(' et ')+'.');
+ if(wasBattle&&battle){
+   // Conseil de guerre compte comme une réaction jouée : les passes sont remises à zéro,
+   // puis la priorité passe au joueur suivant une fois son effet entièrement résolu.
+   advancePriority(true);
+   battle.seconds=15;
+   resumeBattleTimer();render();return;
+ }
+ render();
 }
 function cardIndexByName(name){return CARDS.findIndex(c=>c.name===name)}
 function agentDefaults(i){
@@ -1970,6 +1985,11 @@ function battleCardLegality(cardId, owner){
     return {ok:false,reason:'Jouable lorsqu’un adversaire doit gagner de l’Or.'};
   }
 
+  if(name==='Conseil de guerre'){
+    if(owner!==currentPriorityPlayer())return {ok:false,reason:'Vous devez avoir la priorité pour jouer Conseil de guerre.'};
+    return {ok:true,complex:true,reason:'Piochez 2 cartes puis défaussez-en 2.'};
+  }
+
   // Les autres Tactiques peuvent légalement interrompre la bataille,
   // mais leur effet complexe n'est pas encore automatisé.
   return {ok:true,complex:true,reason:'Jouable maintenant — effet complexe à automatiser.'};
@@ -2078,6 +2098,11 @@ function playBattleCard(handIndex){
   if(!legality.ok){
     log(cardDef(id).name+' non jouable : '+legality.reason);
     renderBattle();render();
+    return;
+  }
+
+  if(cardDef(id).name==='Conseil de guerre'){
+    playCouncil(handIndex);
     return;
   }
 
@@ -2342,7 +2367,7 @@ function startLandBattle(target,n){
  const defender=c.hostile?null:c.owner;
  const defBase=(c.hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(target);
  attacked.add(target);
- battle={kind:'land',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,hostile:c.hostile,stack:[],seconds:10,reactionSide:'defender'};
+ battle={kind:'land',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:c.hostile,stack:[],seconds:10,reactionSide:'defender'};
  log('Bataille terrestre en '+target+' : '+n+' Att contre '+defBase+' Déf.');
  startReactionWindow();
 }
@@ -2351,7 +2376,7 @@ function startSeaBattle(target,n,defender){
  const defCoeff=FACTIONS[p(defender).faction].def;
  const defBase=defUnits*defCoeff;
  attacked.add(target);
- battle={kind:'sea',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:defUnits,hostile:false,stack:[],seconds:10,reactionSide:'defender'};
+ battle={kind:'sea',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:defUnits,epicDefenderUnits:defUnits,hostile:false,stack:[],seconds:10,reactionSide:'defender'};
  log('Bataille maritime en '+target+' : '+n+' Att contre '+defBase+' Déf ('+defUnits+' unité(s) ×'+defCoeff+').');
  startReactionWindow();
 }
@@ -2361,9 +2386,12 @@ function resolveBattle(){
  const attacker=battle.attacker,defender=battle.defender;
  if(a>d){
    const surv=Math.min(battle.attackUnits,a-d);
-   if((battle.defOriginalUnits||0)>=10){
+   // Bataille épique : on regarde la puissance militaire TOTALE du camp vaincu
+   // au moment de la résolution (unités + cartes/bonus de bataille), pas ses unités de départ.
+   if(d>=10&&!battle.epicVpAwarded){
+     battle.epicVpAwarded=true;
      G.players[attacker].pvPermanent=(G.players[attacker].pvPermanent||0)+1;
-     log('🏆 '+p(attacker).name+' gagne 1 Point de victoire permanent pour avoir remporté une bataille contre '+battle.defOriginalUnits+' unités.');
+     log('🏆 BATAILLE ÉPIQUE : '+p(attacker).name+' gagne 1 Point de victoire permanent en battant une puissance militaire totale de '+d+'.');
    }
    if(battle.kind==='land'&&battle.trebuchetsUsed&&defender!==null){
      const wid=cardIndexByName('Murs frontaliers'),wc=wallCount(defender);
@@ -2394,6 +2422,11 @@ function resolveBattle(){
    }
    log('Victoire de '+p(attacker).name+' en '+target+' : '+a+' contre '+d+', '+surv+' survivant(s).');
  }else{
+   if(defender!==null&&a>=10&&!battle.epicVpAwarded){
+     battle.epicVpAwarded=true;
+     G.players[defender].pvPermanent=(G.players[defender].pvPermanent||0)+1;
+     log('🏆 BATAILLE ÉPIQUE : '+p(defender).name+' gagne 1 Point de victoire permanent en battant une puissance militaire totale de '+a+'.');
+   }
    if(battle.kind==='land'){
      const c=G.b[target];
      if(battle.hostile){
@@ -2928,7 +2961,7 @@ function renderPlayerRail(){
        '<b>Cartes publiques en jeu</b>'+
        '<div class="peekCards">'+(publicCards.length?publicCards.map(id=>'<div class="peekCard">'+CARDS[id].name+'</div>').join(''):'<small>Aucune pour le moment.</small>')+'</div>'+
      '</div>';
-   card.onclick=()=>togglePlayerPeek(i);
+   card.onclick=(e)=>{e.stopPropagation();togglePlayerPeek(i)};
    rail.appendChild(card);
  });
 
@@ -3222,6 +3255,10 @@ function render(){
 }
 $('startBtn').onclick=()=>{$('start').classList.add('hidden');$('game').classList.remove('hidden');init()};
 document.addEventListener('pointerdown',e=>{
+ // Un clic hors des encarts joueurs referme le détail actuellement épinglé.
+ if(pinnedPlayer!==null&&!e.target.closest('.playerCard')){
+   pinnedPlayer=null;renderPlayerRail();
+ }
  const preview=$('inPlayPreview');
  if(!preview||preview.classList.contains('hidden'))return;
  if(preview.contains(e.target)||e.target.closest('.inPlayTitleBtn'))return;
