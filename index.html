@@ -234,10 +234,15 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .portalIcon,.buildingIcon,.fortressIcon,.cityIcon{z-index:60!important}
 .dragon,.dragonIcon,.dragonToken,#dragonToken{z-index:90!important}
 
-.fortressIcon.withUnits{left:14px!important}
 /* Affichage : dés < bâtiments/portail < dragon */
 .portalIcon,.buildingIcon,.fortressIcon,.cityIcon{z-index:80!important}
 .dragon,.dragonIcon,.dragonToken,#dragonToken,.dragonMarker,[class*="dragon"]{z-index:120!important}
+
+.spot{isolation:isolate}
+.spot .stack,.spot .battleDicePair{z-index:20!important}
+.spot .portalIcon,.spot .buildingIcon,.spot .fortressIcon,.spot .cityIcon{z-index:80!important}
+.spot .fortressIcon.withUnits{left:calc(50% + 20px)!important;top:50%!important;transform:translate(-50%,-50%)!important}
+.spot .dragon{z-index:999!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -250,7 +255,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE TEST</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Superposition pions v38</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Dragon + forteresse v39</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
