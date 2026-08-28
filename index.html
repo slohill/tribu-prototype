@@ -19,7 +19,7 @@ main{display:grid;grid-template-columns:100px minmax(0,780px) 320px;gap:12px;pad
 .stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:2px;z-index:8;pointer-events:none}
 .die{min-width:31px;width:31px;height:31px;padding:0;border:0;border-radius:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;line-height:1;color:#111;text-shadow:0 1px 1px #fff9;background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;box-shadow:none}
 .ghost{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:31px;height:31px;border:3px dashed #111;border-radius:6px;background:#fff9;color:#111;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:12;pointer-events:none}
-.dragon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;object-fit:contain;z-index:11;pointer-events:none;filter:drop-shadow(0 2px 3px #0008)}.dragon.withUnits{left:calc(50% + 31px);width:46px;height:46px}
+.dragon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;object-fit:contain;z-index:11;pointer-events:none;filter:drop-shadow(0 2px 3px #0008)}.dragon.withUnits{left:calc(50% + 31px);width:46px;height:46px}
 .floatActions{position:absolute;transform:translate(-50%,-50%);display:flex;gap:2px;z-index:30;background:#111c;padding:2px;border-radius:5px;line-height:1}.floatActions button{height:15px;min-width:25.5px;padding:1px 3px;font-size:10px;line-height:1}.yes{background:#328a4a;color:#fff}.no{background:#9a3535;color:#fff}
 aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.section{border-top:1px solid #46514c;margin-top:11px;padding-top:10px}.row{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}
 .badge{display:inline-block;padding:3px 7px;background:#36413c;border-radius:999px;font-size:12px;margin:2px}.dot{display:inline-block;width:14px;height:14px;border:1px solid #111;border-radius:3px;vertical-align:-2px}
@@ -156,7 +156,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .pileIcon b{display:block;margin:0!important;color:#d4d8d6!important}
 .pileIcon small{color:#c4cac7!important}
 .dragon{z-index:27!important}
-.dragon.withBuildingOnly{left:calc(50% + 26px)!important;top:50%!important;width:69px!important;height:69px!important;z-index:28!important}
+.dragon.withBuildingOnly{left:calc(50% + 26px)!important;top:50%!important;width:53px!important;height:53px!important;z-index:28!important}
 .dragon.withUnitsAndBuilding{left:calc(50% + 26px)!important;top:50%!important;z-index:28!important}
 
 .returnStronghold{outline:6px solid #f2d35c!important;box-shadow:0 0 0 4px #111,0 0 18px #f2d35c!important}
@@ -275,7 +275,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .spot .cityIcon.battleWithDice{left:calc(50% + 34px)!important}
 
 /* v52 — Dragon sur PNJ seul : même décalage latéral qu’un bâtiment seul */
-.spot .dragon.withPnjOnly{left:calc(50% + 26px)!important;top:50%!important;width:84px!important;height:84px!important}
+.spot .dragon.withPnjOnly{left:calc(50% + 26px)!important;top:50%!important;width:64px!important;height:64px!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
