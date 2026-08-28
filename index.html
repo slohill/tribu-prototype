@@ -285,6 +285,11 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .spot .dragon.withBuildingOnly{width:46px!important;height:46px!important;left:calc(50% + 26px)!important;top:50%!important}
 .spot .dragon.withUnitsAndBuilding{width:46px!important;height:46px!important}
 .spot .dragon.withPnjOnly{width:46px!important;height:46px!important;left:calc(50% + 31px)!important;top:50%!important}
+
+/* v56 — Commerce local */
+.commerceBar{display:flex;gap:6px;margin:0 0 8px;position:relative;z-index:95}.commerceBar button{flex:1;font-weight:900}.commerceBadge{display:inline-block;min-width:18px;padding:1px 5px;border-radius:10px;background:#f0c44c;color:#111;font-size:10px;margin-left:4px}
+.commerceOverlay{position:fixed;inset:0;background:#000b;z-index:5000;display:flex;align-items:center;justify-content:center;padding:18px}.commerceOverlay.hidden{display:none}.commerceModal{width:min(980px,96vw);max-height:90vh;overflow:auto;background:#151719;border:1px solid #777;border-radius:14px;padding:14px;box-shadow:0 18px 60px #000}.commerceHead{display:flex;align-items:center;gap:8px;justify-content:space-between;position:sticky;top:-14px;background:#151719;padding:8px 0;z-index:3}.commerceHead h2{margin:0}.commerceTabs{display:flex;gap:6px;flex-wrap:wrap}.commerceGrid{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}.commerceBox{border:1px solid #555;border-radius:10px;padding:10px;background:#202326}.commerceBox h3{margin:0 0 8px}.commerceCards{display:flex;gap:6px;flex-wrap:wrap;max-height:230px;overflow:auto}.commerceCard{width:145px;min-height:64px;text-align:left;border:1px solid #666;border-radius:8px;padding:6px;background:#292d31;color:#eee}.commerceCard.selected{outline:2px solid #f0c44c}.commerceCard small{display:block;font-size:9px;opacity:.8}.commerceOffer{border:1px solid #555;border-radius:9px;padding:8px;margin:7px 0;background:#1b1e21}.commerceOffer.pending{border-color:#f0c44c}.commerceOffer.accepted{border-color:#70cf78}.commerceOffer.invalid{border-color:#e86b6b}.commerceOffer .meta{font-size:10px;opacity:.8}.commerceOffer .sides{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}.commerceOffer .side{background:#262a2e;border-radius:7px;padding:6px}.commerceActions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.commerceActions button{font-size:11px;padding:5px 7px}.commerceGold{width:72px}.commerceHint{font-size:10px;opacity:.8;margin:5px 0}.commerceShown{font-size:18px;font-weight:900;border:1px solid #777;border-radius:9px;padding:16px;text-align:center;margin:8px 0}.commerceEmpty{opacity:.65;font-size:11px;padding:10px}.commerceNotice{padding:7px;border-radius:7px;background:#332f1c;margin:6px 0;font-size:11px}
+@media(max-width:760px){.commerceGrid{grid-template-columns:1fr}.commerceModal{max-height:94vh;padding:10px}.commerceCard{width:128px}}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -305,7 +310,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Nouvelles cartes + hot-seat v50</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Commerce local v56</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -350,6 +355,8 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
   <div id="paidDrawWindow" class="note hidden" style="margin-top:7px"></div>
   <div id="goldReactionBox" class="goldReactionBox hidden"></div>
 
+
+  <div class="commerceBar" id="commerceBar"><button id="commerceOpen">🤝 Commerce <span id="commerceCount" class="commerceBadge">0</span></button><button id="commercePause" class="hidden">⏸️ Pause</button></div>
   <div class="rightSection">
     <b>Tour de jeu</b>
     <div class="turnGrid">
@@ -453,6 +460,13 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
     <div id="agentChoices" class="agentChoices"></div>
     <button id="agentClose">Fermer</button>
   </div>
+</div>
+
+<div id="commerceOverlay" class="commerceOverlay hidden">
+ <div class="commerceModal">
+  <div class="commerceHead"><h2>🤝 Commerce</h2><div class="commerceTabs"><button id="commerceNewOffer">Proposer</button><button id="commerceNewAsk">Demander</button><button id="commerceShowCard">Montrer une carte</button><button id="commerceClose">Fermer</button></div></div>
+  <div id="commerceBody"></div>
+ </div>
 </div>
 <script>
 const DATA={"POS":{"A1":[9.46,28.86],"A2":[9.26,39.04],"A3":[14.84,43.36],"A4":[18.03,47.96],"A5":[13.15,59.53],"B1":[9.46,66.37],"B2":[16.14,68.32],"B3":[8.96,83.79],"B4":[13.94,81.7],"B5":[23.41,87.28],"C1":[26.1,23.84],"C2":[25.9,34.02],"C3":[26.79,44.62],"C4":[33.96,29.56],"C5":[41.33,35.97],"D1":[51.89,37.37],"D2":[59.76,31.79],"D3":[70.42,29.42],"D4":[64.94,38.34],"D5":[57.97,44.34],"E1":[35.46,46.71],"E2":[47.41,45.45],"E3":[55.28,53.12],"E4":[43.13,54.52],"E5":[50.7,61.9],"F1":[28.19,56.61],"F2":[36.25,60.79],"F3":[34.06,69.02],"F4":[43.23,69.57],"F5":[50.9,71.66],"G1":[64.84,52.28],"G2":[64.14,62.04],"G3":[60.66,73.06],"G4":[69.72,70.69],"G5":[67.63,82.26],"H1":[84.26,23.84],"H2":[88.45,28.16],"H3":[83.07,35.0],"H4":[81.57,46.57],"H5":[86.85,42.52],"I1":[82.17,55.21],"I2":[89.14,56.19],"I3":[82.57,64.83],"I4":[89.04,67.48],"I5":[85.76,77.1],"U":[16.24,17.01],"V":[29.88,79.61],"W":[48.8,24.12],"X":[73.41,49.36],"Y":[95.22,37.23],"Z":[77.79,87.42]},"R":{"A1":["A","e",0,["A2"],["U"]],"A2":["A","e",0,["A1"],[]],"A3":["A","e",0,["A4"],["U"]],"A4":["A","e",0,["A3"],[]],"A5":["A","e",1,["B1","B2"],["U"]],"B1":["B","e",0,["A5","B2"],[]],"B2":["B","e",0,["A5","B1"],["V"]],"B3":["B","t",1,["B4"],[]],"B4":["B","t",0,["B3"],["V"]],"B5":["B","t",0,[],["V"]],"C1":["C","e",0,["C2","C4"],["U"]],"C2":["C","e",0,["C1","C3","C4"],[]],"C3":["C","e",1,["C2","C4","E1","F1"],[]],"C4":["C","t",0,["C1","C2","C3","C5","E1"],[]],"C5":["C","t",0,["C4","E1","E2","D1"],["W"]],"D1":["D","t",0,["C5","E2","D2","D5"],["W"]],"D2":["D","t",0,["D1","D3","D4","D5"],[]],"D3":["D","t",0,["D2","D4"],[]],"D4":["D","t",0,["D2","D3","D5","G1"],["X"]],"D5":["D","t",1,["D1","D2","D4","E2","E3","G1"],[]],"E1":["E","t",0,["C3","C4","C5","E2","E4","F1","F2"],[]],"E2":["E","t",0,["E1","E3","E4","C5","D1","D5"],[]],"E3":["E","t",0,["E2","E4","E5","D5","G1","G2"],[]],"E4":["E","t",1,["E1","E2","E3","E5","F2","F4"],[]],"E5":["E","t",0,["E3","E4","F4","F5","G2","G3"],[]],"F1":["F","t",0,["C3","E1","F2","F3"],["V"]],"F2":["F","t",0,["E1","E4","F1","F3","F4"],[]],"F3":["F","t",1,["F1","F2","F4"],[]],"F4":["F","t",0,["F2","F3","F5","E4","E5"],[]],"F5":["F","t",0,["E5","F4","G3"],["V"]],"G1":["G","t",0,["D4","D5","E3","G2"],["X"]],"G2":["G","d",1,["G1","G3","G4","E3","E5"],[]],"G3":["G","d",0,["G2","G4","G5","F5","E5"],[]],"G4":["G","d",0,["G2","G3","G5"],[]],"G5":["G","d",0,["G3","G4"],["Z"]],"H1":["H","t",0,["H2","H3"],[]],"H2":["H","t",0,["H1","H3","H5"],[]],"H3":["H","t",1,["H1","H2","H4","H5"],[]],"H4":["H","t",0,["H3","H5","I1"],["X"]],"H5":["H","d",0,["H2","H3","H4","I1","I2"],["Y"]],"I1":["I","d",0,["H4","H5","I2","I3"],[]],"I2":["I","d",0,["H5","I1","I3","I4"],["Y"]],"I3":["I","d",0,["I1","I2","I4","I5"],[]],"I4":["I","d",0,["I2","I3","I5"],[]],"I5":["I","d",1,["I3","I4"],["Z"]]},"SEA":{"U":["W","V"],"V":["U","Z"],"W":["U","X","Y"],"X":["W","Z","Y"],"Y":["W","X","Z"],"Z":["V","X","Y"]},"PORTS":{"U":["A1","A3","A5","C1"],"V":["B2","B4","B5","F1","F5"],"W":["C5","D1"],"X":["D4","G1","H4"],"Y":["H5","I2"],"Z":["G5","I5"]},"cards":[{"name":"Assassin","count":4,"type":"Tactique","effect":"Lancez un dé. Sur 4, 5 ou 6, éliminez l’Agent ou le Héros ciblé. Sur 1, 2 ou 3, l’effet échoue."},{"name":"Balistes","count":4,"type":"Tactique","effect":"+2 d’Attaque sur toutes vos attaques jusqu’à la fin du tour, ou +2 de Défense sur toutes vos défenses jusqu’à la fin du tour du joueur actif."},{"name":"Caravane de commerce","count":2,"type":"Tactique","effect":"Révélez autant de cartes Tribu qu’il y a de joueurs. Chacun choisit une carte dans le sens horaire."},{"name":"Catapultes","count":3,"type":"Tactique","effect":"+5 d’Attaque ou de Défense durant une bataille."},{"name":"Conseil de guerre","count":3,"type":"Tactique","effect":"Piochez 2 cartes puis défaussez 2 cartes."},{"name":"Egnobombe","count":1,"type":"Tactique","effect":"Sacrifiez toutes vos unités d’une région terrestre contenant au moins 5 soldats ; détruisez les unités des cases adjacentes et mers reliées."},{"name":"Divination de l’Oracle","count":2,"type":"Tactique","effect":"Activez l’Oracle visible ou choisissez une carte Oracle à placer au-dessus de la pile après mélange."},{"name":"Embuscade","count":3,"type":"Tactique","effect":"Prenez l’Or qu’un adversaire devait gagner par une Récolte ou une carte Tribu."},{"name":"Espion","count":4,"type":"Permanent — Agent","effect":"Une fois par tour pendant votre Phase de Jeu, regardez une carte au hasard dans la main d’un adversaire."},{"name":"Forteresse","count":3,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une de vos régions ; peut changer de propriétaire."},{"name":"Icenia, la cité blanche","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région enneigée, +5 Or à la Récolte, immunité locale à Givre mortel."},{"name":"Mur de pique","count":4,"type":"Tactique","effect":"+4 de Défense sur une bataille."},{"name":"Montures","count":2,"type":"Tactique","effect":"Au choix : nouveau point de déplacement pour toutes vos unités jusqu’à la fin du tour, ou +4 Attaque sur une bataille."},{"name":"Murs frontaliers","count":3,"type":"Permanent — Bâtiment","effect":"Toutes vos régions gagnent +1 Défense ; cumulable."},{"name":"Pluie de flèches","count":4,"type":"Tactique","effect":"+3 d’Attaque ou de Défense sur une bataille."},{"name":"Sundo, cité du soleil","count":1,"type":"Permanent — Bâtiment","effect":"+10 Défense sur une région désertique, +5 Or à la Récolte, immunité locale à Tempête de sable."},{"name":"Taxe","count":4,"type":"Tactique","effect":"+1 Or pour chaque case où vous avez des unités."},{"name":"Voleur","count":3,"type":"Permanent — Agent","effect":"Une fois par tour, tentez de voler une carte ; sur 1 le Voleur est défaussé. Peut exploiter une carte vue par un Espion."},{"name":"Section de l’ombre","count":1,"type":"Tactique","effect":"Jusqu’à 6 unités peuvent conquérir une case de votre choix ou défendre une case attaquée, même hors de votre tour."},{"name":"Plan des trébuchets","count":2,"type":"Permanent — Objet","effect":"Bonus contre Murs frontaliers, Forteresses et Cités ; destruction des bâtiments si victoire ; non cumulable."},{"name":"Portails","count":1,"type":"Permanent — Bâtiment","effect":"Deux régions terrestres deviennent adjacentes. Portails inaltérables et inutilisables par le Dragon."},{"name":"Pyrodontes de guerre","count":3,"type":"Tactique","effect":"+5 d’Attaque sur une bataille en région tempérée ; effet perdu si le climat change avant résolution."}]},POS=DATA.POS,R=DATA.R,SEA=DATA.SEA,PORTS=DATA.PORTS,CARDS=DATA.cards;
@@ -645,7 +659,7 @@ function finishHumanSetup(){
  log('Installation terminée. '+p(0).name+' commence la partie.');
  render();
 }
-function init(){
+function init(){commerceDeals=[];commerceSeq=1;commerceDraft=null;commerceBattlePaused=false;
  COLORS.splice(0,COLORS.length,...BASE_COLORS);
  setupState=null;hotseatReaction=null;hotseatViewerOverride=null;
  G={active:0,turn:1,phase:'start',dragon:'E4',victoryTarget:Number($('victoryMode').value)||3,players:[
@@ -3489,9 +3503,77 @@ function openDiscard(){
 }
 function closeDiscard(){$('discardOverlay').classList.add('hidden')}
 
+
+// ===== v56 : COMMERCE LOCAL =====
+let commerceDeals=[],commerceSeq=1,commerceDraft=null,commerceBattlePaused=false,commerceTick=null;
+function commerceHumans(){return G?G.players.map((x,i)=>({x,i})).filter(o=>!o.x.bot).map(o=>o.i):[]}
+function commerceViewer(){let v=localViewer();if(v==null||G.players[v].bot){const h=commerceHumans();return h.length?h[0]:G.active}return v}
+function commercePartners(v){return G.players.map((x,i)=>i).filter(i=>i!==v)}
+function commerceCanExecute(d){return G.phase==='play'&&(G.active===d.from||G.active===d.to)}
+function commerceCardName(id){return CARDS[id]?CARDS[id].name:'Carte inconnue'}
+function commerceHasCards(i,ids){const hand=G.players[i].hand.slice();return ids.every(id=>{const k=hand.indexOf(id);if(k<0)return false;hand.splice(k,1);return true})}
+function commerceValid(d){return commerceHasCards(d.from,d.giveCards)&&commerceHasCards(d.to,d.wantCards)&&G.players[d.from].gold>=d.giveGold&&G.players[d.to].gold>=d.wantGold}
+function commerceRemoveCards(i,ids){ids.forEach(id=>{const k=G.players[i].hand.indexOf(id);if(k>=0)G.players[i].hand.splice(k,1)})}
+function commerceExecute(d){
+ if(d.status!=='accepted'||!commerceCanExecute(d))return;
+ if(!commerceValid(d)){d.status='invalid';log('Commerce : l’échange #'+d.id+' est invalide, une ressource promise n’est plus disponible.');renderCommerce();render();return}
+ commerceRemoveCards(d.from,d.giveCards);commerceRemoveCards(d.to,d.wantCards);
+ G.players[d.to].hand.push(...d.giveCards);G.players[d.from].hand.push(...d.wantCards);
+ G.players[d.from].gold-=d.giveGold;G.players[d.to].gold+=d.giveGold;G.players[d.to].gold-=d.wantGold;G.players[d.from].gold+=d.wantGold;
+ d.status='done';log('Commerce : échange #'+d.id+' conclu entre '+p(d.from).name+' et '+p(d.to).name+'.');renderCommerce();render();
+}
+function commerceAccept(id){const d=commerceDeals.find(x=>x.id===id);if(!d||d.status!=='pending')return;d.status='accepted';d.expires=0;log(p(commerceViewer()).name+' accepte la négociation #'+d.id+'.');if(commerceCanExecute(d))commerceExecute(d);else{renderCommerce();render()}}
+function commerceRefuse(id){const d=commerceDeals.find(x=>x.id===id);if(!d)return;d.status='refused';d.expires=0;log('Commerce : proposition #'+d.id+' refusée.');renderCommerce()}
+function commerceCounter(id){const d=commerceDeals.find(x=>x.id===id);if(!d)return;const v=commerceViewer(),other=v===d.from?d.to:d.from;commerceDraft={mode:'offer',from:v,to:other,giveCards:[],wantCards:[],giveGold:0,wantGold:0,parent:id};renderCommerce()}
+function commerceOpen(){if(!G)return;$('commerceOverlay').classList.remove('hidden');commerceDraft=null;renderCommerce()}
+function commerceClose(){$('commerceOverlay').classList.add('hidden');commerceDraft=null}
+function commerceStart(mode){const v=commerceViewer(),ps=commercePartners(v);commerceDraft={mode,from:v,to:ps[0],giveCards:[],wantCards:[],giveGold:0,wantGold:0,parent:null};renderCommerce()}
+function commerceToggleCard(side,id){if(!commerceDraft)return;const a=commerceDraft[side],k=a.indexOf(id);if(k>=0)a.splice(k,1);else a.push(id);renderCommerce()}
+function commerceSubmit(){const d=commerceDraft;if(!d||d.to==null)return;
+ if(d.mode==='show'){if(d.giveCards.length!==1)return;commerceDeals.unshift({id:commerceSeq++,type:'show',from:d.from,to:d.to,giveCards:d.giveCards.slice(),status:'shown',expires:Date.now()+60000});log(p(d.from).name+' montre une carte à '+p(d.to).name+' pendant 1 minute.');}
+ else{commerceDeals.unshift({id:commerceSeq++,type:d.mode,from:d.from,to:d.to,giveCards:d.giveCards.slice(),wantCards:d.wantCards.slice(),giveGold:+d.giveGold||0,wantGold:+d.wantGold||0,status:'pending',expires:Date.now()+120000,parent:d.parent||null});log(p(d.from).name+' ouvre une négociation avec '+p(d.to).name+'.');}
+ commerceDraft=null;renderCommerce();render();
+}
+function commerceDemandCatalog(){return CARDS.map((c,id)=>({id,name:c.name}))}
+function commerceDealText(ids){return ids.length?ids.map(commerceCardName).join(', '):'aucune carte'}
+function commerceRenderDraft(){const d=commerceDraft;if(!d)return '';
+ const partners=commercePartners(d.from);let h='<div class="commerceBox"><h3>'+(d.mode==='show'?'Montrer une carte':d.mode==='ask'?'Demander':'Proposer')+'</h3>';
+ h+='<label>À : <select id="commerceTarget">'+partners.map(i=>'<option value="'+i+'" '+(i===d.to?'selected':'')+'>'+p(i).name+(p(i).bot?' 🤖':'')+'</option>').join('')+'</select></label>';
+ h+='<h4>Vos cartes'+(d.mode==='show'?' — choisissez-en une':' à proposer')+'</h4><div class="commerceCards">'+p(d.from).hand.map(id=>'<button class="commerceCard '+(d.giveCards.includes(id)?'selected':'')+'" data-cgive="'+id+'"><b>'+commerceCardName(id)+'</b><small>'+CARDS[id].type+'</small></button>').join('')+'</div>';
+ if(d.mode!=='show'){
+   h+='<label>Or proposé : <input id="commerceGiveGold" class="commerceGold" type="number" min="0" max="'+p(d.from).gold+'" value="'+d.giveGold+'"></label>';
+   h+='<h4>Cartes demandées</h4><div class="commerceHint">Catalogue complet TRIBU : une carte peut être demandée même si l’autre joueur ne la possède pas actuellement.</div><div class="commerceCards">'+commerceDemandCatalog().map(o=>'<button class="commerceCard '+(d.wantCards.includes(o.id)?'selected':'')+'" data-cwant="'+o.id+'"><b>'+o.name+'</b></button>').join('')+'</div>';
+   h+='<label>Or demandé : <input id="commerceWantGold" class="commerceGold" type="number" min="0" value="'+d.wantGold+'"></label>';
+ }
+ h+='<div class="commerceActions"><button id="commerceSubmit">Envoyer</button><button id="commerceDraftCancel">Annuler</button></div></div>';return h;
+}
+function commerceRenderDeal(d,v){
+ const left=d.from,right=d.to,remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;
+ if(d.type==='show'){
+   const visible=v===d.to||v===d.from;return '<div class="commerceOffer"><b>Carte montrée — '+p(left).name+' → '+p(right).name+'</b><div class="meta">'+(remain?remain+' s restantes':'terminé')+'</div>'+(visible&&remain?'<div class="commerceShown">'+commerceCardName(d.giveCards[0])+'</div>':'<div class="commerceEmpty">Carte masquée ou délai terminé.</div>')+(v===d.to&&remain?'<div class="commerceActions"><button data-seen="'+d.id+'">Vu</button></div>':'')+'</div>';
+ }
+ const cls=d.status==='pending'?'pending':d.status==='accepted'?'accepted':d.status==='invalid'?'invalid':'';
+ let h='<div class="commerceOffer '+cls+'"><b>Négociation #'+d.id+(d.parent?' — contre-proposition à #'+d.parent:'')+'</b><div class="meta">'+p(left).name+' ↔ '+p(right).name+' — '+(d.status==='pending'?(remain+' s'):d.status)+'</div><div class="sides"><div class="side"><b>'+p(left).name+' donne</b><br>'+commerceDealText(d.giveCards)+(d.giveGold?' + '+d.giveGold+' Or':'')+'</div><div class="side"><b>'+p(right).name+' donne</b><br>'+commerceDealText(d.wantCards)+(d.wantGold?' + '+d.wantGold+' Or':'')+'</div></div>';
+ if(d.status==='pending'&&v===d.to)h+='<div class="commerceActions"><button data-accept="'+d.id+'">Accepter</button><button data-refuse="'+d.id+'">Refuser</button><button data-counter="'+d.id+'">Contre-proposer</button></div>';
+ if(d.status==='accepted')h+='<div class="commerceNotice">Accord accepté. '+(commerceCanExecute(d)?'L’échange peut être exécuté maintenant.':'Il sera exécutable pendant la Phase de Jeu de '+p(d.from).name+' ou '+p(d.to).name+'.')+'</div>'+(commerceCanExecute(d)?'<div class="commerceActions"><button data-execute="'+d.id+'">Exécuter l’échange</button></div>':'');
+ return h+'</div>';
+}
+function renderCommerce(){if(!G)return;const v=commerceViewer(),body=$('commerceBody');if(!body)return;
+ let h='<div class="commerceGrid"><div>'+commerceRenderDraft()+'<div class="commerceBox"><h3>Règles locales</h3><div class="commerceHint">Les négociations peuvent être ouvertes hors tour. Un échange accepté ne peut être exécuté que pendant la Phase de Jeu de l’un des deux participants. Les cartes et l’Or promis sont revérifiés au moment de l’échange.</div></div></div><div class="commerceBox"><h3>Négociations</h3>';
+ const relevant=commerceDeals.filter(d=>d.from===v||d.to===v);h+=relevant.length?relevant.map(d=>commerceRenderDeal(d,v)).join(''):'<div class="commerceEmpty">Aucune négociation pour '+p(v).name+'.</div>';h+='</div></div>';body.innerHTML=h;
+ const t=$('commerceTarget');if(t)t.onchange=()=>{commerceDraft.to=+t.value;renderCommerce()};document.querySelectorAll('[data-cgive]').forEach(b=>b.onclick=()=>{if(commerceDraft.mode==='show')commerceDraft.giveCards=[];commerceToggleCard('giveCards',+b.dataset.cgive)});document.querySelectorAll('[data-cwant]').forEach(b=>b.onclick=()=>commerceToggleCard('wantCards',+b.dataset.cwant));
+ const gg=$('commerceGiveGold');if(gg)gg.onchange=()=>commerceDraft.giveGold=Math.max(0,Math.min(p(commerceDraft.from).gold,+gg.value||0));const wg=$('commerceWantGold');if(wg)wg.onchange=()=>commerceDraft.wantGold=Math.max(0,+wg.value||0);const sb=$('commerceSubmit');if(sb)sb.onclick=commerceSubmit;const cc=$('commerceDraftCancel');if(cc)cc.onclick=()=>{commerceDraft=null;renderCommerce()};
+ document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>commerceAccept(+b.dataset.accept));document.querySelectorAll('[data-refuse]').forEach(b=>b.onclick=()=>commerceRefuse(+b.dataset.refuse));document.querySelectorAll('[data-counter]').forEach(b=>b.onclick=()=>commerceCounter(+b.dataset.counter));document.querySelectorAll('[data-execute]').forEach(b=>b.onclick=()=>commerceExecute(commerceDeals.find(d=>d.id===+b.dataset.execute)));document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=()=>{const d=commerceDeals.find(x=>x.id===+b.dataset.seen);if(d){d.expires=0;d.status='seen';renderCommerce();render()}});
+}
+function commerceUpdateBar(){if(!G)return;const v=commerceViewer(),n=commerceDeals.filter(d=>(d.to===v||d.from===v)&&['pending','accepted','shown'].includes(d.status)).length,c=$('commerceCount');if(c)c.textContent=n;const pb=$('commercePause');if(pb){const timed=!!battle&&!isHotseatMode();pb.classList.toggle('hidden',!timed);pb.textContent=commerceBattlePaused?'▶️ Reprendre':'⏸️ Pause'}}
+function commerceToggleBattlePause(){if(!battle||isHotseatMode())return;if(!commerceBattlePaused){clearInterval(battleTick);clearTimeout(botReactionTimer);commerceBattlePaused=true;log('Bataille mise en pause pour le Commerce.');}else{commerceBattlePaused=false;resumeBattleTimer();log('Bataille reprise.');}commerceUpdateBar();renderCommerce()}
+function commerceClock(){if(!G)return;let changed=false;const now=Date.now();commerceDeals.forEach(d=>{if(d.expires&&d.expires<=now){d.expires=0;if(d.status==='pending')d.status='expired';else if(d.status==='shown')d.status='seen';changed=true}});if(changed)render();if(!$('commerceOverlay').classList.contains('hidden'))renderCommerce();commerceUpdateBar()}
+setInterval(commerceClock,1000);
+
 function render(){
  applyOracleMapVisual();
  if(!G)return;
+ commerceUpdateBar();
  if(G.phase!=='setup'&&checkVictory())return;
  const dc=$('deckCount'),xc=$('discardCount');if(dc)dc.textContent=G.deck.length;if(xc)xc.textContent=G.discard.length;
  const oa=$('oracleActiveName'),on=$('oracleNextName');if(oa)oa.textContent=oracleName();const nid=nextOracle();if(on)on.textContent=nid===null?'—':ORACLES[nid].name;
@@ -3658,5 +3740,7 @@ document.addEventListener('pointerdown',e=>{
  hideInPlayPreview();
  renderInPlaySelection();
 });
+
+$('commerceOpen').onclick=commerceOpen;$('commerceClose').onclick=commerceClose;$('commerceNewOffer').onclick=()=>commerceStart('offer');$('commerceNewAsk').onclick=()=>commerceStart('ask');$('commerceShowCard').onclick=()=>commerceStart('show');$('commercePause').onclick=commerceToggleBattlePause;
 $('hotseatReveal').onclick=revealHotseatHand;$('oracleNoticePass').onclick=finishOracleNotice;$('dragonSixPass').onclick=finishDragonSixNotice;$('dragonPublicPass').onclick=passDragonPublic;$('dragonCurseContinue').onclick=continueDragonCurse;$('discardPile').onclick=openDiscard;$('deckPile').onclick=()=>{};$('discardClose').onclick=closeDiscard;$('restart').onclick=init;$('victoryRestart').onclick=init;$('agentClose').onclick=closeAgentModal;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('resetRecruit').onclick=resetRecruitment;$('endRecruit').onclick=beginPlay;$('toOracle').onclick=toOracle;$('choiceConfirm').onclick=confirmCouncil;$('roll').onclick=roll;
 </script></body></html>
