@@ -1779,9 +1779,19 @@ function queueBot(reason){
  const token=++botToken;
  if(!G || !isBot() || battle || shadowState || paidDrawState || goldReaction)return;
  botTimer=setTimeout(()=>{
+   botTimer=null;
    if(token!==botToken || !G || !isBot() || battle || shadowState || paidDrawState || goldReaction)return;
    botAdvance();
  },650);
+}
+// Filet de sécurité : un bot arrivé aux deux phases Oracle ne doit jamais
+// rester immobile si un rendu/overlay a interrompu son timer principal.
+function ensureBotOracleProgress(){
+ if(!G||gameOverState||!isBot()||battle||shadowState||paidDrawState||goldReaction)return;
+ if(!['oracleMove','oracleRoll'].includes(G.phase))return;
+ if(oracleNoticeState||oracleState)return; // ces séquences ont leur propre continuation
+ if(botTimer)return;
+ queueBot('sécurité Oracle');
 }
 function botAttackBonus(i,target){
  let best=0;
@@ -3643,6 +3653,7 @@ function render(){
    pd.innerHTML='<b>🃏 Carte piochée — '+paidDrawState.seconds+' s</b><br>Regardez votre main et jouez une carte si vous le souhaitez. Le tour reprendra automatiquement ensuite.';
  }
  if(isBot()){$('status').innerHTML+='<div class="botNotice">🤖 '+pl.name+' joue automatiquement — '+G.phase+'</div>';}
+ setTimeout(ensureBotOracleProgress,80);
  $('recruitBox').classList.toggle('hidden',G.phase!=='recruit');
  $('playBox').classList.toggle('hidden',G.phase!=='play');
  $('oracleBox').classList.toggle('hidden',!['oracleMove','oracleRoll'].includes(G.phase));
