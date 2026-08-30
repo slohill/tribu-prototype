@@ -1343,9 +1343,10 @@ function chooseShadowTarget(r){
  // Battle B: pause A until B resolves.
  shadowState=null;
  if(parent)battleStack.push({battle:parent,seconds:s.parentBattleSeconds||15});
- const defender=c.hostile?null:c.owner;
- const defBase=(c.hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(r);
- battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:c.hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true,shadowMove:(s.carriedMove||[]).slice()};
+ const hostile=effectiveHostile(r),db=defensiveBuildingAt(r);
+ const defender=hostile?null:(c.owner!==null?c.owner:(db&&db.owner!==null?db.owner:null));
+ const defBase=(hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(r);
+ battle={kind:'land',target:r,attacker:actor,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:hostile,stack:[],seconds:15,reactionSide:'defender',fromShadow:true,shadowMove:(s.carriedMove||[]).slice()};
  log('Section de l’ombre ouvre une nouvelle bataille en '+r+' : '+n+' Att contre '+defBase+' Déf.');startReactionWindow();render();
 }
 function resumeBattleTimer(){
@@ -1643,6 +1644,15 @@ function cityAt(r){
  const b=G.b[r]&&G.b[r].building;
  return b&&['Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?b:null;
 }
+function defensiveBuildingAt(r){
+ const b=G.b[r]&&G.b[r].building;
+ return b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?b:null;
+}
+function effectiveHostile(r){
+ const c=G.b[r];
+ // Une Forteresse/Cité présente signifie qu'il n'y a pas de PNJ sous le bâtiment.
+ return !!(c&&c.hostile&&!defensiveBuildingAt(r));
+}
 function buildingDefense(r){
  const cell=G.b[r],b=cell&&cell.building;
  let bonus=b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?10:0;
@@ -1812,7 +1822,7 @@ function botTargetDefense(target){
    return Math.min(...enemies.map(e=>e.units*FACTIONS[p(e.owner).faction].def));
  }
  const c=G.b[target];
- if(c.hostile)return 5+buildingDefense(target);
+ if(effectiveHostile(target))return 5+buildingDefense(target);
  if(c.owner===null || c.owner===G.active)return buildingDefense(target);
  return c.units*FACTIONS[p(c.owner).faction].def+buildingDefense(target);
 }
@@ -2217,9 +2227,8 @@ function legalSources(d){return neighbors(d).filter(s=>movableCount(s)>0)}
 function enemyRegion(id){
  if(isSea(id))return false;
  const c=G.b[id],b=c.building;
- const hostileOccupant=c.hostile||(c.owner!==null&&c.owner!==G.active);
- // Forteresse/Cité can represent an enemy holding when the region is empty.
- // A Portail is only a connection: its owner never makes the region hostile.
+ const hostileOccupant=effectiveHostile(id)||(c.owner!==null&&c.owner!==G.active);
+ // Une Forteresse/Cité vide appartient encore à son propriétaire. Un Portail n'est jamais une garnison.
  const hostileBuilding=!!(b&&b.type!=='Portail'&&b.owner!==null&&b.owner!==G.active);
  return hostileOccupant||hostileBuilding;
 }
@@ -2710,11 +2719,11 @@ function openSeaChoice(n){
  actions.appendChild(cancel);
 }
 function startLandBattle(target,n){
- const c=G.b[target];
- const defender=c.hostile?null:c.owner;
- const defBase=(c.hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(target);
+ const c=G.b[target],hostile=effectiveHostile(target),db=defensiveBuildingAt(target);
+ const defender=hostile?null:(c.owner!==null?c.owner:(db&&db.owner!==null?db.owner:null));
+ const defBase=(hostile?5:(defender===null?0:c.units*FACTIONS[p(defender).faction].def))+buildingDefense(target);
  attacked.add(target);
- battle={kind:'land',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:c.hostile,stack:[],seconds:10,reactionSide:'defender'};
+ battle={kind:'land',target,attacker:G.active,defender,attackUnits:n,defenseBase:defBase,defOriginalUnits:c.units,epicDefenderUnits:c.units,hostile:hostile,stack:[],seconds:10,reactionSide:'defender'};
  log('Bataille terrestre en '+target+' : '+n+' Att contre '+defBase+' Déf.');
  startReactionWindow();
 }
@@ -3490,13 +3499,14 @@ function renderHandBattleState(){
    if(battle&&sid!==undefined&&CARDS[sid].name==='Egnobombe'&&canPlayEgnobombe(viewer)){d.classList.add('battlePlayable');d.title='Jouer Egnobombe maintenant';d.onclick=()=>startEgnobombe(idx);return}
    if(!battle)return;
    const anytimeId=G.players[viewer].hand[idx];
-   if(anytimeId!==undefined&&CARDS[anytimeId]&&['Assassin','Caravane de commerce','Divination de l’Oracle'].includes(CARDS[anytimeId].name)){
+   if(anytimeId!==undefined&&CARDS[anytimeId]&&['Assassin','Caravane de commerce','Divination de l’Oracle','Taxe'].includes(CARDS[anytimeId].name)){
      d.classList.add('battlePlayable');
      d.title='Jouable à n’importe quel moment';
      d.onclick=()=>{
        const n=CARDS[anytimeId].name;
        if(n==='Assassin')startAssassin(idx);
        else if(n==='Caravane de commerce')startCaravan(idx);
+       else if(n==='Taxe')playTax(idx);
        else openDivination(idx);
      };
      return;
