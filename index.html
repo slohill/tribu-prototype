@@ -879,6 +879,13 @@ function resolveGoldGain(){
  clearGoldReactionTimer();
  const r=goldReaction;
  goldReaction=null;
+ // La chaîne d'Or appartient au tour qui l'a ouverte. Si une ancienne version
+ // de callback a tenté de changer de joueur, on refuse de poursuivre un faux flux.
+ if(r.turnEpoch!==undefined&&r.turnEpoch!==turnEpoch){
+   log('Sécurité Or : ancienne résolution ignorée après changement de tour.');
+   render();
+   return;
+ }
  G.players[r.receiver].gold+=r.amount;
  log(p(r.receiver).name+' reçoit finalement '+r.amount+' Or'+(r.source?' ('+r.source+')':'')+'.');
  if(triggerRichDragon(r.receiver,r.after))return;
@@ -897,7 +904,9 @@ function playAmbush(playerIndex){
    amount:r.amount,
    source:'Embuscade sur '+r.source,
    after:r.after,
-   seconds:10
+   seconds:10,
+   turnOwner:r.turnOwner!==undefined?r.turnOwner:G.active,
+   turnEpoch:r.turnEpoch!==undefined?r.turnEpoch:turnEpoch
  };
  log(p(playerIndex).name+' joue Embuscade sur '+p(previous).name+' : '+r.amount+' Or sont maintenant destinés à '+p(playerIndex).name+'.');
 
@@ -922,7 +931,7 @@ function offerGoldGain(receiver,amount,source,after){
    if(after==='beginPlay')beginPlay();else render();
    return;
  }
- goldReaction={receiver,amount,source,after,seconds:10};
+ goldReaction={receiver,amount,source,after,seconds:10,turnOwner:G.active,turnEpoch};
  log(p(receiver).name+' doit recevoir '+amount+' Or : '+(isHotseatMode()?'réactions hot-seat sans chrono.':'fenêtre de réaction de 10 secondes.'));
  startGoldReactionTimer();
  render();
@@ -2164,7 +2173,23 @@ function beginReturnChoice(){
 }
 function advanceTurn(reason='nouveau tour'){
  if(gameOverState)return;
+ // Aucun changement de joueur n'est autorisé tant qu'un gain d'Or est encore
+ // en cours de résolution (Récolte / Taxe / Embuscade). Une ancienne callback
+ // Oracle ou un timer ne doit jamais pouvoir sauter la phase Oracle du joueur actif.
+ if(goldReaction){
+   log('Sécurité tour : changement de joueur ignoré pendant une résolution d’Or.');
+   return;
+ }
  turnEpoch++;
+ // Une résolution Oracle appartient strictement au tour qui l'a lancée.
+ // En changeant réellement de joueur, on détruit tous ses callbacks/états
+ // résiduels afin qu'ils ne puissent jamais sacrifier/déplacer pour le tour suivant.
+ clearInterval(oracleNoticeTick);oracleNoticeTick=null;
+ oracleNoticeState=null;
+ const ono=$('oracleNoticeOverlay');if(ono)ono.classList.add('hidden');
+ oracleState=null;
+ oracleResolutionAfter=null;oracleResolutionTurnEpoch=null;
+ oraclePendingNormalMap=false;
  hotseatViewerOverride=null;
  clearTimeout(botTimer);botToken++;dest=null;picks={};returnState=null;
  G.players.forEach(pl=>{pl.attackTurnBonus=0;pl.defenseTurnBonus=0});
@@ -2965,19 +2990,27 @@ function finishOracleResolution(){
  applyOracleMapVisual();
 }
 function completeOracleResolution(){
- finishOracleResolution();
  const cb=oracleResolutionAfter;
  const expectedEpoch=oracleResolutionTurnEpoch;
- oracleResolutionAfter=null;
- oracleResolutionTurnEpoch=null;
- // Une résolution Oracle est asynchrone (notice, choix, déplacement du Dragon...).
- // Si son tour d'origine est déjà terminé, son ancien callback ne doit surtout
- // pas faire avancer une seconde fois le joueur suivant.
+ // Vérifier l'appartenance AVANT toute autre mutation : une vieille résolution
+ // ne doit même plus modifier la carte, les sacrifices ou le joueur courant.
  if(expectedEpoch!==null&&expectedEpoch!==turnEpoch){
-   log('Sécurité Oracle : ancienne résolution ignorée, le tour a déjà changé.');
-   render();
+   oracleResolutionAfter=null;oracleResolutionTurnEpoch=null;
    return;
  }
+ // Pour l'Oracle normal de fin de tour, la résolution n'a le droit de terminer
+ // le tour que si le joueur est encore réellement dans la phase Oracle.
+ // Les Divinations ont un callback (cb) et restent autorisées hors de cette phase.
+ if(!cb&&G.phase!=='oracleResolving'){
+   log('Sécurité Oracle : fin de résolution ignorée hors de la phase Oracle.');
+   oracleResolutionAfter=null;oracleResolutionTurnEpoch=null;
+   oraclePendingNormalMap=false;
+   applyOracleMapVisual();
+   return;
+ }
+ finishOracleResolution();
+ oracleResolutionAfter=null;
+ oracleResolutionTurnEpoch=null;
  if(cb){cb();return}
  advanceTurn('Oracle résolu');
 }
@@ -3143,13 +3176,21 @@ function destroyDragonRegionAndEnd(){
  checkDecimations();advanceTurn('nouveau tour');
 }
 function roll(){
- if(paidDrawState||isDecimated(G.active)||oracleState)return;
+ // Un seul lancer Oracle par tour. Dès qu'un 1 lance une résolution, aucun
+ // second lancer (humain, bot ou ancien timer) ne peut entrer ici.
+ if(paidDrawState||isDecimated(G.active)||oracleState||oracleNoticeState||G.phase!=='oracleRoll')return;
  const n=1+Math.floor(Math.random()*6);
  log('Dé Oracle : '+n+'.');
  const active=G.oracleActive!==null?ORACLES[G.oracleActive].name:null;
  const dragonHit=n===6||(active==='En quête de destruction'&&(n===4||n===5));
- if(n===1){activateOracle();return;}
- if(dragonHit){destroyDragonRegionAndEnd();return}
+ if(n===1){
+   G.phase='oracleResolving';
+   clearTimeout(botTimer);botTimer=null;botToken++;
+   activateOracle();
+   render();
+   return;
+ }
+ if(dragonHit){G.phase='oracleResolving';destroyDragonRegionAndEnd();return}
  checkDecimations();advanceTurn('nouveau tour');
 }
 function factionDieImage(owner){
