@@ -289,6 +289,22 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 /* v56 — Commerce local */
 .commerceBar{display:flex;gap:6px;margin:0 0 8px;position:relative;z-index:95}.commerceBar button{flex:1;font-weight:900}.commerceBadge{display:inline-block;min-width:18px;padding:1px 5px;border-radius:10px;background:#f0c44c;color:#111;font-size:10px;margin-left:4px}
 .commerceOverlay{position:fixed;inset:0;background:#000b;z-index:5000;display:flex;align-items:center;justify-content:center;padding:18px}.commerceOverlay.hidden{display:none}.commerceModal{width:min(980px,96vw);max-height:90vh;overflow:auto;background:#151719;border:1px solid #777;border-radius:14px;padding:14px;box-shadow:0 18px 60px #000}.commerceHead{display:flex;align-items:center;gap:8px;justify-content:space-between;position:sticky;top:-14px;background:#151719;padding:8px 0;z-index:3}.commerceHead h2{margin:0}.commerceTabs{display:flex;gap:6px;flex-wrap:wrap}.commerceGrid{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}.commerceBox{border:1px solid #555;border-radius:10px;padding:10px;background:#202326}.commerceBox h3{margin:0 0 8px}.commerceCards{display:flex;gap:6px;flex-wrap:wrap;max-height:230px;overflow:auto}.commerceCard{width:145px;min-height:64px;text-align:left;border:1px solid #666;border-radius:8px;padding:6px;background:#292d31;color:#eee}.commerceCard.selected{outline:2px solid #f0c44c}.commerceCard small{display:block;font-size:9px;opacity:.8}.commerceOffer{border:1px solid #555;border-radius:9px;padding:8px;margin:7px 0;background:#1b1e21}.commerceOffer.pending{border-color:#f0c44c}.commerceOffer.accepted{border-color:#70cf78}.commerceOffer.invalid{border-color:#e86b6b}.commerceOffer .meta{font-size:10px;opacity:.8}.commerceOffer .sides{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}.commerceOffer .side{background:#262a2e;border-radius:7px;padding:6px}.commerceActions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.commerceActions button{font-size:11px;padding:5px 7px}.commerceGold{width:72px}.commerceHint{font-size:10px;opacity:.8;margin:5px 0}.commerceShown{font-size:18px;font-weight:900;border:1px solid #777;border-radius:9px;padding:16px;text-align:center;margin:8px 0}.commerceEmpty{opacity:.65;font-size:11px;padding:10px}.commerceNotice{padding:7px;border-radius:7px;background:#332f1c;margin:6px 0;font-size:11px}.commerceArchive{margin-top:10px;border-top:1px solid #555;padding-top:8px}.commerceArchive summary{cursor:pointer;font-weight:900;padding:6px 0}.commerceOffer.closed{opacity:.72}.commerceCards{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.commerceModal{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+
+/* v70 — tableau Commerce permanent sous la main */
+.commerceBoard{margin-top:8px;border:1px solid #50555a;border-radius:10px;background:#171a1d;overflow:hidden}
+.commerceBoardHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:#22262a;border-bottom:1px solid #50555a;font-weight:900;font-size:12px}
+.commerceBoardHead button{padding:3px 7px;font-size:10px}
+.commerceBoardRows{display:flex;flex-direction:column}
+.commerceBoardRow{display:grid;grid-template-columns:108px minmax(0,1fr);min-height:42px;border-top:1px solid #34383c}
+.commerceBoardRow:first-child{border-top:0}
+.commerceBoardPlayer{display:flex;align-items:center;padding:6px 8px;font-weight:900;font-size:11px;background:#1d2023;border-right:1px solid #34383c}
+.commerceBoardDeals{display:flex;align-items:center;gap:6px;padding:5px 6px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.commerceBoardDeal{flex:0 0 auto;max-width:260px;min-width:150px;text-align:left;border:1px solid #5a6066;border-radius:7px;background:#272b2f;color:#eee;padding:5px 7px;font-size:10px;line-height:1.2}
+.commerceBoardDeal.pending{border-color:#f0c44c}.commerceBoardDeal.accepted{border-color:#70cf78}.commerceBoardDeal.expired{border-style:dashed}.commerceBoardDeal.invalid,.commerceBoardDeal.refused{opacity:.7}
+.commerceBoardDeal b{display:block;font-size:10px;margin-bottom:2px}.commerceBoardDeal small{display:block;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.commerceBoardEmpty{opacity:.55;font-size:10px;padding:9px 7px}
+.commerceBoardPrivate{opacity:.7;font-size:10px;padding:9px}
+@media(max-width:760px){.commerceBoardRow{grid-template-columns:82px minmax(0,1fr)}.commerceBoardPlayer{font-size:10px;padding:5px}.commerceBoardDeal{min-width:138px;max-width:220px;padding:4px 6px}}
 @media(max-width:760px){.commerceGrid{grid-template-columns:1fr}.commerceOverlay{padding:6px;align-items:stretch}.commerceModal{height:calc(100dvh - 12px);max-height:calc(100dvh - 12px);padding:10px;overflow-y:auto}.commerceCards{max-height:42dvh;overflow-y:auto}.commerceCard{width:128px;touch-action:manipulation}}
 
 /* v66 — appui prolongé joueur sans sélection de texte */
@@ -313,7 +329,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Commerce local v57</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Commerce tableau permanent v70</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -346,6 +362,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
     <div class="bottomPanel handOnlyPanel">
       <h3 class="compactHandTitle">Main — <span id="handCount">0</span> carte(s)</h3>
       <div id="hand" class="handHorizontal"></div>
+      <div id="commerceBoard" class="commerceBoard"></div>
     </div>
   </div>
 
@@ -2656,7 +2673,8 @@ function renderBattle(){
    : '<small>Aucune carte jouée.</small>';
 
   // Le rendu de la main doit se mettre à jour quand la priorité change.
-  renderHandBattleState();
+  renderCommerceBoard();
+ renderHandBattleState();
 }
 
 function chooseDest(id){if(G.phase!=='play')return;if(!enemyRegion(id)&&usedDest.has(id)){log(id+' déjà utilisée comme destination ce cycle.');render();return}if(!isSea(id)&&attacked.has(id)){log(id+' déjà attaquée ce tour.');render();return}if(!legalSources(id).length){log('Aucune unité disponible ne peut rejoindre '+id+'.');render();return}dest=id;picks={};render()}
@@ -3690,15 +3708,64 @@ function commerceRenderDraft(){const d=commerceDraft;if(!d)return '';
 function commerceRenderDeal(d,v){
  const left=d.from,right=d.to,remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;
  if(d.type==='show'){
-   const visible=v===d.to||v===d.from;return '<div class="commerceOffer '+(d.closed?'closed':'')+'"><b>Carte montrée — '+p(left).name+' → '+p(right).name+'</b><div class="meta" data-commerce-remain="'+d.id+'">'+(remain?remain+' s restantes':'terminé')+'</div>'+(visible&&remain?'<div class="commerceShown">'+commerceCardName(d.giveCards[0])+'</div>':'<div class="commerceEmpty">Carte masquée ou délai terminé.</div>')+(v===d.to&&remain?'<div class="commerceActions"><button data-seen="'+d.id+'">Vu</button></div>':'')+'<div class="commerceActions"><button data-close-deal="'+d.id+'">Fermer</button></div></div>';
+   const visible=v===d.to||v===d.from;return '<div data-deal-card="'+d.id+'" class="commerceOffer '+(d.closed?'closed':'')+'"><b>Carte montrée — '+p(left).name+' → '+p(right).name+'</b><div class="meta" data-commerce-remain="'+d.id+'">'+(remain?remain+' s restantes':'terminé')+'</div>'+(visible&&remain?'<div class="commerceShown">'+commerceCardName(d.giveCards[0])+'</div>':'<div class="commerceEmpty">Carte masquée ou délai terminé.</div>')+(v===d.to&&remain?'<div class="commerceActions"><button data-seen="'+d.id+'">Vu</button></div>':'')+'<div class="commerceActions"><button data-close-deal="'+d.id+'">Fermer</button></div></div>';
  }
  const cls=d.status==='pending'?'pending':d.status==='accepted'?'accepted':d.status==='invalid'?'invalid':'';
- let h='<div class="commerceOffer '+cls+(d.closed?' closed':'')+'"><b>Négociation #'+d.id+(d.parent?' — contre-proposition à #'+d.parent:'')+'</b><div class="meta" data-commerce-remain="'+d.id+'">'+p(left).name+' ↔ '+p(right).name+' — '+(d.status==='pending'?(remain+' s'):d.status)+'</div><div class="sides"><div class="side"><b>'+p(left).name+' donne :</b><br>'+commerceDealText(d.giveCards)+(d.giveGold?' + '+d.giveGold+' Or':'')+'</div><div class="side"><b>'+p(right).name+' donne :</b><br>'+commerceDealText(d.wantCards)+(d.wantGold?' + '+d.wantGold+' Or':'')+'</div></div>';
+ let h='<div data-deal-card="'+d.id+'" class="commerceOffer '+cls+(d.closed?' closed':'')+'"><b>Négociation #'+d.id+(d.parent?' — contre-proposition à #'+d.parent:'')+'</b><div class="meta" data-commerce-remain="'+d.id+'">'+p(left).name+' ↔ '+p(right).name+' — '+(d.status==='pending'?(remain+' s'):d.status)+'</div><div class="sides"><div class="side"><b>'+p(left).name+' donne :</b><br>'+commerceDealText(d.giveCards)+(d.giveGold?' + '+d.giveGold+' Or':'')+'</div><div class="side"><b>'+p(right).name+' donne :</b><br>'+commerceDealText(d.wantCards)+(d.wantGold?' + '+d.wantGold+' Or':'')+'</div></div>';
  if(d.status==='pending'&&v===d.to)h+='<div class="commerceNotice"><b>'+p(left).name+' vous donne :</b><br>'+commerceDealText(d.giveCards)+(d.giveGold?' + '+d.giveGold+' Or':'')+'</div><div class="commerceActions"><button data-accept="'+d.id+'">Accepter</button><button data-refuse="'+d.id+'">Refuser</button><button data-counter="'+d.id+'">Modifier / contre-proposer</button></div>';
  if(d.status==='accepted')h+='<div class="commerceNotice">Accord accepté. '+(commerceCanExecute(d)?'L’échange peut être exécuté maintenant.':'Il sera exécutable pendant la Phase de Jeu de '+p(d.from).name+' ou '+p(d.to).name+'.')+'</div>'+(commerceCanExecute(d)?'<div class="commerceActions"><button data-execute="'+d.id+'">Exécuter l’échange</button></div>':'');
  if(d.status==='expired')h+='<div class="commerceNotice">Le délai de 2 minutes est terminé. La négociation peut être relancée avec les mêmes termes.</div><div class="commerceActions"><button data-reopen-expired="'+d.id+'">Réouvrir — 2 min</button></div>';
  h+='<div class="commerceActions"><button data-close-deal="'+d.id+'">Fermer</button></div>';
  return h+'</div>';
+}
+function commerceBoardStatus(d){
+ if(d.type==='show')return d.status==='shown'?'montrée':d.status==='seen'?'vue':d.status;
+ const labels={pending:'en cours',accepted:'acceptée',expired:'expirée',refused:'refusée',done:'terminée',invalid:'invalide'};
+ return labels[d.status]||d.status;
+}
+function commerceBoardSummary(d,v){
+ if(d.type==='show')return p(d.from).name+' montre '+commerceDealText(d.giveCards);
+ const a=commercialSideText(d.giveCards,d.giveGold),b=commercialSideText(d.wantCards,d.wantGold);
+ return p(d.from).name+' donne '+a+' ↔ '+p(d.to).name+' donne '+b;
+}
+function commercialSideText(ids,gold){
+ const bits=[];
+ if(ids&&ids.length)bits.push(ids.map(commerceCardName).join(', '));
+ if(gold)bits.push(gold+' Or');
+ return bits.length?bits.join(' + '):'rien';
+}
+function commerceOpenDeal(id,viewer){
+ if(Number.isInteger(viewer))commerceViewerOverride=viewer;
+ commerceDraft=null;
+ $('commerceOverlay').classList.remove('hidden');
+ renderCommerce();
+ setTimeout(()=>{const el=document.querySelector('[data-deal-card="'+id+'"]');if(el)el.scrollIntoView({block:'center',behavior:'smooth'})},0);
+}
+function renderCommerceBoard(){
+ const root=$('commerceBoard');if(!root||!G)return;
+ const v=displayedHandViewer();
+ if(v===null||!G.players[v]||G.players[v].bot){
+   root.innerHTML='<div class="commerceBoardHead"><span>🤝 Commerce</span></div><div class="commerceBoardPrivate">Ouvrez la main d’un joueur humain pour afficher son tableau de commerce.</div>';
+   return;
+ }
+ const others=G.players.map((pl,i)=>i===v?null:i).filter(i=>i!==null);
+ let html='<div class="commerceBoardHead"><span>🤝 Commerce — '+p(v).name+'</span><button type="button" data-commerce-board-open>Nouvelle proposition</button></div><div class="commerceBoardRows">';
+ others.forEach(i=>{
+   const deals=commerceDeals.filter(d=>!d.closed&&((d.from===v&&d.to===i)||(d.from===i&&d.to===v))).slice().sort((a,b)=>b.id-a.id);
+   html+='<div class="commerceBoardRow"><div class="commerceBoardPlayer" style="color:'+COLORS[i]+'">'+p(i).name+(p(i).bot?' 🤖':'')+'</div><div class="commerceBoardDeals">';
+   if(!deals.length)html+='<div class="commerceBoardEmpty">Aucune proposition</div>';
+   else deals.forEach(d=>{
+     const remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;
+     const counter=d.parent?'Contre-proposition #'+d.id:'Proposition #'+d.id;
+     const status=commerceBoardStatus(d)+(d.status==='pending'&&remain?' · '+remain+' s':'');
+     html+='<button type="button" class="commerceBoardDeal '+d.status+'" data-commerce-board-deal="'+d.id+'" data-board-commerce-remain="'+d.id+'"><b>'+counter+' — '+status+'</b><small>'+commerceBoardSummary(d,v)+'</small></button>';
+   });
+   html+='</div></div>';
+ });
+ html+='</div>';
+ root.innerHTML=html;
+ const open=root.querySelector('[data-commerce-board-open]');if(open)open.onclick=()=>{commerceViewerOverride=v;commerceOpen()};
+ root.querySelectorAll('[data-commerce-board-deal]').forEach(b=>b.onclick=()=>commerceOpenDeal(+b.dataset.commerceBoardDeal,v));
 }
 function commerceBind(){
  document.querySelectorAll('[data-commerce-viewer]').forEach(b=>b.onclick=()=>{commerceViewerOverride=+b.dataset.commerceViewer;commerceDraft=null;renderCommerce()});
@@ -3711,7 +3778,7 @@ function commerceBind(){
  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>commerceAccept(+b.dataset.accept));document.querySelectorAll('[data-refuse]').forEach(b=>b.onclick=()=>commerceRefuse(+b.dataset.refuse));document.querySelectorAll('[data-counter]').forEach(b=>b.onclick=()=>commerceCounter(+b.dataset.counter));document.querySelectorAll('[data-execute]').forEach(b=>b.onclick=()=>commerceExecute(commerceDeals.find(d=>d.id===+b.dataset.execute)));document.querySelectorAll('[data-seen]').forEach(b=>b.onclick=()=>{const d=commerceDeals.find(x=>x.id===+b.dataset.seen);if(d){d.expires=0;d.status='seen';renderCommerce();render()}});
  document.querySelectorAll('[data-close-deal]').forEach(b=>b.onclick=()=>commerceSetClosed(+b.dataset.closeDeal,true));document.querySelectorAll('[data-reopen-expired]').forEach(b=>b.onclick=()=>commerceReopenExpired(+b.dataset.reopenExpired));
 }
-function renderCommerce(){if(!G)return;const v=commerceViewer(),body=$('commerceBody');if(!body)return;
+function renderCommerce(){if(!G)return;renderCommerceBoard();const v=commerceViewer(),body=$('commerceBody');if(!body)return;
  const relevant=commerceDeals.filter(d=>d.from===v||d.to===v),open=relevant.filter(d=>!d.closed),closed=relevant.filter(d=>d.closed);
  const humans=commerceHumans();
  let viewerBar=humans.length>1?'<div class="commerceBox" style="margin-bottom:10px"><b>Commerce consulté par :</b><div class="commerceActions">'+humans.map(i=>'<button data-commerce-viewer="'+i+'" '+(i===v?'disabled':'')+'>'+p(i).name+'</button>').join('')+'</div><div class="commerceHint">Sur le même appareil, choisissez ici le joueur qui consulte ses propositions et contre-propositions.</div></div>':'';
@@ -3720,9 +3787,10 @@ function renderCommerce(){if(!G)return;const v=commerceViewer(),body=$('commerce
  h+='<details class="commerceArchive" '+(closed.length?'':'hidden')+'><summary>🗑️ Corbeille ('+closed.length+')</summary><div class="commerceHint">Les propositions et contre-propositions placées ici restent consultables, mais ne peuvent plus être réouvertes.</div>'+(closed.map(d=>{if(d.type==='show')return '<div class="commerceOffer closed"><b>Carte montrée #'+d.id+'</b><div class="meta">'+p(d.from).name+' → '+p(d.to).name+' — '+d.status+'</div><div class="sides"><div class="side"><b>'+p(d.from).name+' avait montré :</b><br>'+commerceDealText(d.giveCards)+'</div></div></div>';return '<div class="commerceOffer closed"><b>Négociation #'+d.id+(d.parent?' — contre-proposition à #'+d.parent:'')+'</b><div class="meta">'+p(d.from).name+' ↔ '+p(d.to).name+' — '+d.status+'</div><div class="sides"><div class="side"><b>'+p(d.from).name+' donnait :</b><br>'+commerceDealText(d.giveCards)+(d.giveGold?' + '+d.giveGold+' Or':'')+'</div><div class="side"><b>'+p(d.to).name+' donnait :</b><br>'+commerceDealText(d.wantCards)+(d.wantGold?' + '+d.wantGold+' Or':'')+'</div></div></div>'}).join(''))+'</details></div></div>';body.innerHTML=h;commerceBind();
 }
 function commerceUpdateTimers(){document.querySelectorAll('[data-commerce-remain]').forEach(el=>{const d=commerceDeals.find(x=>x.id===+el.dataset.commerceRemain);if(!d)return;const remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;if(d.type==='show')el.textContent=remain?remain+' s restantes':'terminé';else el.textContent=p(d.from).name+' ↔ '+p(d.to).name+' — '+(d.status==='pending'?(remain+' s'):d.status)})}
+function commerceUpdateBoardTimers(){document.querySelectorAll('[data-board-commerce-remain]').forEach(el=>{const d=commerceDeals.find(x=>x.id===+el.dataset.boardCommerceRemain);if(!d)return;const b=el.querySelector('b');if(!b)return;const remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;const counter=d.parent?'Contre-proposition #'+d.id:'Proposition #'+d.id;b.textContent=counter+' — '+commerceBoardStatus(d)+(d.status==='pending'&&remain?' · '+remain+' s':'')})}
 function commerceUpdateBar(){if(!G)return;const v=commerceViewer(),n=commerceDeals.filter(d=>!d.closed&&(d.to===v||d.from===v)&&['pending','accepted','shown'].includes(d.status)).length,c=$('commerceCount');if(c)c.textContent=n;const pb=$('commercePause');if(pb){const timed=!!battle&&!isHotseatMode();pb.classList.toggle('hidden',!timed);pb.textContent=commerceBattlePaused?'▶️ Reprendre':'⏸️ Pause'}}
 function commerceToggleBattlePause(){if(!battle||isHotseatMode())return;if(!commerceBattlePaused){clearInterval(battleTick);clearTimeout(botReactionTimer);commerceBattlePaused=true;log('Bataille mise en pause pour le Commerce.');}else{commerceBattlePaused=false;resumeBattleTimer();log('Bataille reprise.');}commerceUpdateBar();renderCommerce()}
-function commerceClock(){if(!G)return;let changed=false;const now=Date.now();commerceDeals.forEach(d=>{if(d.expires&&d.expires<=now){d.expires=0;if(d.status==='pending')d.status='expired';else if(d.status==='shown')d.status='seen';changed=true}});if(changed){render();if(!$('commerceOverlay').classList.contains('hidden'))renderCommerce()}else if(!$('commerceOverlay').classList.contains('hidden'))commerceUpdateTimers();commerceUpdateBar()}
+function commerceClock(){if(!G)return;let changed=false;const now=Date.now();commerceDeals.forEach(d=>{if(d.expires&&d.expires<=now){d.expires=0;if(d.status==='pending')d.status='expired';else if(d.status==='shown')d.status='seen';changed=true}});if(changed){render();if(!$('commerceOverlay').classList.contains('hidden'))renderCommerce()}else{commerceUpdateBoardTimers();if(!$('commerceOverlay').classList.contains('hidden'))commerceUpdateTimers()}commerceUpdateBar()}
 setInterval(commerceClock,1000);
 
 function render(){
