@@ -295,11 +295,11 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 .commerceBoardHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:#22262a;border-bottom:1px solid #50555a;font-weight:900;font-size:12px}
 .commerceBoardHead button{padding:3px 7px;font-size:10px}
 .commerceBoardRows{display:flex;flex-direction:column}
-.commerceBoardRow{display:grid;grid-template-columns:108px minmax(0,1fr);min-height:42px;border-top:1px solid #34383c}
+.commerceBoardRow{display:grid;grid-template-columns:108px minmax(0,1fr);min-height:84px;border-top:1px solid #34383c}
 .commerceBoardRow:first-child{border-top:0}
 .commerceBoardPlayer{display:flex;align-items:center;padding:6px 8px;font-weight:900;font-size:11px;background:#1d2023;border-right:1px solid #34383c}
 .commerceBoardDeals{display:flex;align-items:center;gap:6px;padding:5px 6px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
-.commerceBoardDeal{flex:0 0 auto;max-width:260px;min-width:150px;text-align:left;border:1px solid #5a6066;border-radius:7px;background:#272b2f;color:#eee;padding:5px 7px;font-size:10px;line-height:1.2}
+.commerceBoardDeal{flex:0 0 auto;max-width:260px;min-width:150px;min-height:64px;text-align:left;border:1px solid #5a6066;border-radius:7px;background:#272b2f;color:#eee;padding:5px 7px;font-size:10px;line-height:1.2}
 .commerceBoardDeal.pending{border-color:#f0c44c}.commerceBoardDeal.accepted{border-color:#70cf78}.commerceBoardDeal.expired{border-style:dashed}.commerceBoardDeal.invalid,.commerceBoardDeal.refused{opacity:.7}
 .commerceBoardDeal b{display:block;font-size:10px;margin-bottom:2px}.commerceBoardDeal small{display:block;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .commerceBoardEmpty{opacity:.55;font-size:10px;padding:9px 7px}
@@ -309,6 +309,11 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 
 /* v66 — appui prolongé joueur sans sélection de texte */
 .playerCard,.playerCard *{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important}
+
+/* v71 — Commerce permanent plus lisible */
+.commerceBoardRow{min-height:84px!important}
+.commerceBoardDeal{min-height:64px}
+#commerceBoard{display:block!important}
 </style></head>
 <body>
 <section id="start"><div class="startbox"><h1>TRIBU</h1><p>Prototype technique — map calibrée, unités, cartes et tours.</p><div class="row" style="justify-content:center;margin-top:12px">
@@ -329,7 +334,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Commerce tableau permanent v70</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Commerce permanent v72</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -376,7 +381,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
   <div id="goldReactionBox" class="goldReactionBox hidden"></div>
 
 
-  <div class="commerceBar" id="commerceBar"><button id="commerceOpen">🤝 Commerce <span id="commerceCount" class="commerceBadge">0</span></button><button id="commercePause" class="hidden">⏸️ Pause</button></div>
+  <div class="commerceBar" id="commerceBar" style="display:none!important"></div>
   <div class="rightSection">
     <b>Tour de jeu</b>
     <div class="turnGrid">
@@ -3745,11 +3750,11 @@ function renderCommerceBoard(){
  const root=$('commerceBoard');if(!root||!G)return;
  const v=displayedHandViewer();
  if(v===null||!G.players[v]||G.players[v].bot){
-   root.innerHTML='<div class="commerceBoardHead"><span>🤝 Commerce</span></div><div class="commerceBoardPrivate">Ouvrez la main d’un joueur humain pour afficher son tableau de commerce.</div>';
+   root.innerHTML='<div class="commerceBoardHead"><span>🤝 Commerce</span><button type="button" class="hidden" data-commerce-board-pause>⏸️ Pause</button></div><div class="commerceBoardPrivate">Ouvrez la main d’un joueur humain pour afficher son tableau de commerce.</div>';
    return;
  }
  const others=G.players.map((pl,i)=>i===v?null:i).filter(i=>i!==null);
- let html='<div class="commerceBoardHead"><span>🤝 Commerce — '+p(v).name+'</span><button type="button" data-commerce-board-open>Nouvelle proposition</button></div><div class="commerceBoardRows">';
+ let html='<div class="commerceBoardHead"><span>🤝 Commerce — '+p(v).name+'</span><div style="display:flex;gap:6px;align-items:center"><button type="button" class="hidden" data-commerce-board-pause>⏸️ Pause</button><button type="button" data-commerce-board-open>Nouvelle proposition</button></div></div><div class="commerceBoardRows">';
  others.forEach(i=>{
    const deals=commerceDeals.filter(d=>!d.closed&&((d.from===v&&d.to===i)||(d.from===i&&d.to===v))).slice().sort((a,b)=>b.id-a.id);
    html+='<div class="commerceBoardRow"><div class="commerceBoardPlayer" style="color:'+COLORS[i]+'">'+p(i).name+(p(i).bot?' 🤖':'')+'</div><div class="commerceBoardDeals">';
@@ -3765,6 +3770,7 @@ function renderCommerceBoard(){
  html+='</div>';
  root.innerHTML=html;
  const open=root.querySelector('[data-commerce-board-open]');if(open)open.onclick=()=>{commerceViewerOverride=v;commerceOpen()};
+ const pause=root.querySelector('[data-commerce-board-pause]');if(pause)pause.onclick=commerceToggleBattlePause; commerceUpdateBar();
  root.querySelectorAll('[data-commerce-board-deal]').forEach(b=>b.onclick=()=>commerceOpenDeal(+b.dataset.commerceBoardDeal,v));
 }
 function commerceBind(){
@@ -3788,7 +3794,7 @@ function renderCommerce(){if(!G)return;renderCommerceBoard();const v=commerceVie
 }
 function commerceUpdateTimers(){document.querySelectorAll('[data-commerce-remain]').forEach(el=>{const d=commerceDeals.find(x=>x.id===+el.dataset.commerceRemain);if(!d)return;const remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;if(d.type==='show')el.textContent=remain?remain+' s restantes':'terminé';else el.textContent=p(d.from).name+' ↔ '+p(d.to).name+' — '+(d.status==='pending'?(remain+' s'):d.status)})}
 function commerceUpdateBoardTimers(){document.querySelectorAll('[data-board-commerce-remain]').forEach(el=>{const d=commerceDeals.find(x=>x.id===+el.dataset.boardCommerceRemain);if(!d)return;const b=el.querySelector('b');if(!b)return;const remain=d.expires?Math.max(0,Math.ceil((d.expires-Date.now())/1000)):0;const counter=d.parent?'Contre-proposition #'+d.id:'Proposition #'+d.id;b.textContent=counter+' — '+commerceBoardStatus(d)+(d.status==='pending'&&remain?' · '+remain+' s':'')})}
-function commerceUpdateBar(){if(!G)return;const v=commerceViewer(),n=commerceDeals.filter(d=>!d.closed&&(d.to===v||d.from===v)&&['pending','accepted','shown'].includes(d.status)).length,c=$('commerceCount');if(c)c.textContent=n;const pb=$('commercePause');if(pb){const timed=!!battle&&!isHotseatMode();pb.classList.toggle('hidden',!timed);pb.textContent=commerceBattlePaused?'▶️ Reprendre':'⏸️ Pause'}}
+function commerceUpdateBar(){if(!G)return;const timed=!!battle&&!isHotseatMode();document.querySelectorAll('[data-commerce-board-pause]').forEach(pb=>{pb.classList.toggle('hidden',!timed);pb.textContent=commerceBattlePaused?'▶️ Reprendre':'⏸️ Pause'});const bar=$('commerceBar');if(bar)bar.style.display='none'}
 function commerceToggleBattlePause(){if(!battle||isHotseatMode())return;if(!commerceBattlePaused){clearInterval(battleTick);clearTimeout(botReactionTimer);commerceBattlePaused=true;log('Bataille mise en pause pour le Commerce.');}else{commerceBattlePaused=false;resumeBattleTimer();log('Bataille reprise.');}commerceUpdateBar();renderCommerce()}
 function commerceClock(){if(!G)return;let changed=false;const now=Date.now();commerceDeals.forEach(d=>{if(d.expires&&d.expires<=now){d.expires=0;if(d.status==='pending')d.status='expired';else if(d.status==='shown')d.status='seen';changed=true}});if(changed){render();if(!$('commerceOverlay').classList.contains('hidden'))renderCommerce()}else{commerceUpdateBoardTimers();if(!$('commerceOverlay').classList.contains('hidden'))commerceUpdateTimers()}commerceUpdateBar()}
 setInterval(commerceClock,1000);
@@ -3965,6 +3971,6 @@ document.addEventListener('pointerdown',e=>{
  renderInPlaySelection();
 });
 
-$('commerceOpen').onclick=commerceOpen;$('commerceClose').onclick=commerceClose;$('commerceNewOffer').onclick=()=>commerceStart('offer');$('commerceNewAsk').onclick=()=>commerceStart('ask');$('commerceShowCard').onclick=()=>commerceStart('show');$('commercePause').onclick=commerceToggleBattlePause;
+$('commerceClose').onclick=commerceClose;$('commerceNewOffer').onclick=()=>commerceStart('offer');$('commerceNewAsk').onclick=()=>commerceStart('ask');$('commerceShowCard').onclick=()=>commerceStart('show');
 $('hotseatReveal').onclick=revealHotseatHand;$('oracleNoticePass').onclick=finishOracleNotice;$('dragonSixPass').onclick=finishDragonSixNotice;$('dragonPublicPass').onclick=passDragonPublic;$('dragonCurseContinue').onclick=continueDragonCurse;$('discardPile').onclick=openDiscard;$('deckPile').onclick=()=>{};$('discardClose').onclick=closeDiscard;$('restart').onclick=init;$('victoryRestart').onclick=init;$('agentClose').onclick=closeAgentModal;$('draw').onclick=doDraw;$('harvest').onclick=doHarvest;$('recruit').onclick=doRecruit;$('resetRecruit').onclick=resetRecruitment;$('endRecruit').onclick=beginPlay;$('toOracle').onclick=toOracle;$('choiceConfirm').onclick=confirmCouncil;$('roll').onclick=roll;
 </script></body></html>
