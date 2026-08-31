@@ -2258,10 +2258,11 @@ function legalSources(d){return neighbors(d).filter(s=>movableCount(s)>0)}
 function enemyRegion(id){
  if(isSea(id))return false;
  const c=G.b[id],b=c.building;
- const hostileOccupant=effectiveHostile(id)||(c.owner!==null&&c.owner!==G.active);
- // Une Forteresse/Cité vide appartient encore à son propriétaire. Un Portail n'est jamais une garnison.
- const hostileBuilding=!!(b&&b.type!=='Portail'&&b.owner!==null&&b.owner!==G.active);
- return hostileOccupant||hostileBuilding;
+ const hostileOccupant=effectiveHostile(id)||(c.owner!==null&&c.owner!==G.active&&c.units>0);
+ // Un bâtiment défensif VIDE et sans PNJ ne déclenche jamais de bataille :
+ // il est récupéré simplement en y déplaçant au moins une unité.
+ const occupiedDefense=!!(b&&b.type!=='Portail'&&b.owner!==null&&b.owner!==G.active&&(c.units>0||effectiveHostile(id)));
+ return hostileOccupant||occupiedDefense;
 }
 function seaEnemies(id){
   return Object.entries(G.sea[id].fleets)
@@ -2717,7 +2718,18 @@ function commitMovement(n,seaDefender){
    startLandBattle(target,n);
    dest=null;picks={};render();return;
  }else{
-   const c=G.b[target];c.owner=G.active;c.units+=n;c.hostile=false;
+   const c=G.b[target];
+   // Prise pacifique d'une Forteresse/Cité vide : aucune bataille, la carte change
+   // immédiatement de propriétaire et rejoint « En jeu » du joueur entrant.
+   const emptyDefensiveBuilding=c.units===0&&!effectiveHostile(target)&&c.building&&
+     ['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(c.building.type)&&
+     c.building.owner!==G.active;
+   if(emptyDefensiveBuilding){
+     const label=c.building.type;
+     transferBuildingCard(c.building,G.active);
+     log(p().name+' récupère '+label+' vide en '+target+', sans bataille.');
+   }
+   c.owner=G.active;c.units+=n;c.hostile=false;
    movable[target]=(movable[target]||[]).concat(carried);
    usedDest.add(target);
    log(n+' unité(s) rejoignent '+target+'.');
