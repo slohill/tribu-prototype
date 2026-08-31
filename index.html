@@ -1187,14 +1187,19 @@ function resolveEgnobombe(r){
    Object.keys(G.sea[r].fleets).forEach(k=>G.sea[r].fleets[k]=0);
  }else{
    const c=G.b[r];
-   c.units=0;c.owner=null;c.hostile=c.originalHostile;
+   c.units=0;c.owner=null;
+   const neutralized=neutralizeSurvivingDefensiveBuilding(r);
+   c.hostile=neutralized?false:c.originalHostile;
  }
 
- // Toutes les unités des cases adjacentes sont détruites. Les bâtiments survivent.
+ // Toutes les unités des cases adjacentes sont détruites. Les bâtiments survivent :
+ // une Forteresse/Cité dont la garnison est détruite devient donc neutre et récupérable.
  land.forEach(x=>{
    const c=G.b[x];
    if(c.units>0){
-     c.units=0;c.owner=null;c.hostile=c.originalHostile;
+     c.units=0;c.owner=null;
+     const neutralized=neutralizeSurvivingDefensiveBuilding(x);
+     c.hostile=neutralized?false:c.originalHostile;
    }
  });
  seas.forEach(x=>{
@@ -1670,8 +1675,10 @@ function effectiveHostile(r){
 }
 function buildingDefense(r){
  const cell=G.b[r],b=cell&&cell.building;
- let bonus=b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)?10:0;
- if(cell&&cell.owner!==null)bonus+=wallCount(cell.owner);
+ // Forteresse/Cité : +10 uniquement si une garnison de joueur est réellement présente.
+ // Un bâtiment vide/neutre ne défend jamais tout seul.
+ let bonus=b&&['Forteresse','Icenia, la cité blanche','Sundo, cité du soleil'].includes(b.type)&&cell.units>0&&cell.owner!==null?10:0;
+ if(cell&&cell.owner!==null&&cell.units>0)bonus+=wallCount(cell.owner);
  return bonus;
 }
 function currentTerrain(r){
@@ -1709,6 +1716,17 @@ function transferBuildingCard(building,newOwner){
  removeInPlayCard(building.owner,building.cardId);
  if(newOwner!==null&&newOwner!==undefined)G.players[newOwner].inPlay.push(building.cardId);
  building.owner=newOwner;
+}
+function neutralizeSurvivingDefensiveBuilding(r){
+ const c=G.b[r],b=defensiveBuildingAt(r);
+ if(!c||!b||c.units>0)return false;
+ // Un bâtiment défensif qui survit à la destruction de sa garnison devient neutre.
+ // Il reste physiquement sur la carte, quitte le « En jeu » de son ancien propriétaire,
+ // ne génère aucun PNJ et pourra être récupéré sans bataille.
+ transferBuildingCard(b,null);
+ c.owner=null;
+ c.hostile=false;
+ return true;
 }
 function beginBuildingPlacement(handIndex){
  if(isBot()||G.phase!=='play')return;
@@ -2714,6 +2732,16 @@ function commitMovement(n,seaDefender){
    G.sea[target].fleets[G.active]=(G.sea[target].fleets[G.active]||0)+n;
    movable[target]=(movable[target]||[]).concat(carried);
    usedDest.add(target);log(n+' unité(s) rejoignent '+target+'.');
+ }else if((()=>{const c=G.b[target],db=defensiveBuildingAt(target);return !!(c&&db&&c.units===0&&!effectiveHostile(target)&&c.owner===null)})()){
+   // Bâtiment défensif réellement abandonné : capture pacifique prioritaire,
+   // avant toute logique de bataille.
+   const c=G.b[target],db=defensiveBuildingAt(target),label=db.type;
+   transferBuildingCard(db,G.active);
+   c.owner=G.active;c.units+=n;c.hostile=false;
+   movable[target]=(movable[target]||[]).concat(carried);
+   usedDest.add(target);
+   log(p().name+' récupère '+label+' vide en '+target+', sans bataille.');
+   log(n+' unité(s) rejoignent '+target+'.');
  }else if(enemyRegion(target)){
    startLandBattle(target,n);
    dest=null;picks={};render();return;
@@ -2942,7 +2970,12 @@ function nextOracle(){
 }
 function destroyUnitsOnRegion(r){
  if(isSea(r))return;
- const c=G.b[r];c.units=0;c.owner=null;c.hostile=c.originalHostile;
+ const c=G.b[r];
+ c.units=0;c.owner=null;
+ // Oracle : si Forteresse/Cité survit à la perte de sa garnison, elle devient neutre.
+ // Sinon seulement, un éventuel PNJ d'origine peut redevenir présent.
+ const neutralized=neutralizeSurvivingDefensiveBuilding(r);
+ c.hostile=neutralized?false:c.originalHostile;
 }
 function destroySeaUnits(s,oracleName=null){
  if(!G.sea[s])return;
