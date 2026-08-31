@@ -334,7 +334,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Commerce permanent v72</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Commerce sous la main v73</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -3954,6 +3954,9 @@ function render(){
  }
  const railBuy=$('buyDraw');
  if(railBuy)railBuy.disabled=isDecimated(buyViewer)||G.players[buyViewer].bot||G.players[buyViewer].gold<5||!!paidDrawState||!!dragonRichState||!!dragonCurseState;
+ // v73 — le tableau Commerce fait partie intégrante de l'encart Main :
+ // on le rend à chaque rendu général, pas seulement pendant une bataille.
+ renderCommerceBoard();
  renderHandBattleState();
  if(portalMode)renderPortalBanner();else if(dragonRichState)renderRichDragonBanner();else if(returnState)renderReturnBanner();else if(egnoState)renderEgnobombeBanner();else if(shadowState)renderShadowBanner();else if(battle && battle.kind!=='seaChoice')renderBattle();else clearTopBanner();
  $('log').innerHTML=G.log.map(x=>'• '+x+'<br>').join('');
