@@ -334,7 +334,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Commerce contre-proposition v74</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Cartes prioritaires recrutement v76</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1094,6 +1094,17 @@ function consumeDivination(s){
  G.discard.push(id);
  return true;
 }
+function resetRecruitmentForPriorityCard(actor,label){
+ // Une carte prioritaire jouée pendant le recrutement annule d'abord tout le recrutement
+ // en cours, exactement comme « Recommencer le recrutement », puis sa résolution prend la priorité.
+ if(G.phase!=='recruit'||actor!==G.active||!recruitSnapshot||recruitSnapshot.player!==G.active)return false;
+ p().gold=recruitSnapshot.gold;
+ Object.keys(recruitSnapshot.units).forEach(r=>G.b[r].units=recruitSnapshot.units[r]);
+ log(label+' pendant le recrutement : recrutement remis à zéro (Or et unités restaurés), puis résolution prioritaire.');
+ render();
+ return true;
+}
+function resetRecruitmentForDivination(s){return !!s&&resetRecruitmentForPriorityCard(s.actor,'Divination de l’Oracle')}
 function openDivination(handIndex){
  const actor=localViewer(),id=G.players[actor].hand[handIndex];
  if(id===undefined||CARDS[id].name!=='Divination de l’Oracle'||isDecimated(actor)||divinationState)return;
@@ -1116,20 +1127,29 @@ function divinationActivateVisible(){
  if(!divinationState)return;
  const s=divinationState;
  if(!consumeDivination(s)){cancelDivination();return}
+ resetRecruitmentForDivination(s);
+ s.committed=true;
  divinationState=null;$('divinationPanel').classList.add('hidden');
  log(p(s.actor).name+' joue Divination de l’Oracle et active l’Oracle visible.');
  activateOracle(()=>resumeAfterDivination(s),s.actor);
 }
 function divinationChooseNew(){
  if(!divinationState)return;
- $('divinationText').textContent='Choisissez l’Oracle qui deviendra visible au-dessus de la pile.';
+ // À partir de ce choix, la Divination est réellement jouée : on paie la carte,
+ // on remet d'abord le recrutement à zéro, puis le choix d'Oracle se résout prioritairement.
+ const s=divinationState;
+ if(!s.committed){
+   if(!consumeDivination(s)){cancelDivination();return}
+   resetRecruitmentForDivination(s);
+   s.committed=true;
+ }
+ $('divinationText').textContent='Divination en résolution — choisissez l’Oracle qui deviendra visible au-dessus de la pile.';
  const box=$('divinationChoices');box.innerHTML='';
  const names=[...new Set(ORACLES.map(o=>o.name))];
  names.forEach(name=>{
    const b=document.createElement('button');b.className='oraclePick';b.textContent=name;
    b.onclick=()=>divinationSetVisible(name);box.appendChild(b);
  });
- const c=document.createElement('button');c.textContent='Retour';c.onclick=()=>openDivinationChoiceMenu();box.appendChild(c);
 }
 function openDivinationChoiceMenu(){
  if(!divinationState)return;
@@ -1142,6 +1162,13 @@ function openDivinationChoiceMenu(){
 function divinationSetVisible(name){
  if(!divinationState)return;
  const s=divinationState;
+ // Filet de sécurité : toute mutation de l'Oracle arrive seulement après paiement de la carte
+ // et remise à zéro éventuelle du recrutement.
+ if(!s.committed){
+   if(!consumeDivination(s)){cancelDivination();return}
+   resetRecruitmentForDivination(s);
+   s.committed=true;
+ }
 
  // Toutes les cartes Oracle retournent dans le paquet, y compris l'Oracle actif.
  let pool=[...G.oracleDeck,...G.oracleDiscard];
@@ -1157,7 +1184,6 @@ function divinationSetVisible(name){
  G.oracleDeck=pool;
  G.oracleDeck.push(chosen);
 
- if(!consumeDivination(s)){cancelDivination();return}
  divinationState=null;$('divinationPanel').classList.add('hidden');
  log(p(s.actor).name+' remélange tous les Oracles : '+name+' devient l’Oracle visible.');
  resumeAfterDivination(s);
@@ -1271,6 +1297,9 @@ function startShadow(handIndex){
  if(shadowState||choiceState||paidDrawState)return;
  const actor=localViewer(),id=G.players[actor].hand[handIndex];
  if(id===undefined||CARDS[id].name!=='Section de l’ombre')return;
+ // Section de l'ombre interrompt prioritairement un recrutement : le recrutement est
+ // d'abord entièrement remis à son état initial, puis la Section se résout, avant retour au recrutement.
+ resetRecruitmentForPriorityCard(actor,'Section de l’ombre');
  clearInterval(shadowTick);
  shadowState={stage:'gather',player:actor,cardId:id,handIndex,seconds:20,picks:{},parentBattle:battle||null,parentBattleSeconds:battle?battle.seconds:null};
  if(battle){clearInterval(battleTick);clearTimeout(botReactionTimer)}
