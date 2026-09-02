@@ -334,7 +334,7 @@ aside{background:#19201d;padding:13px;border-radius:9px;height:max-content}.sect
 </select></label></div>
 <button id="startBtn">DÉMARRER LA PARTIE</button></div></section>
 <div id="game" class="hidden">
-<header><b>TRIBU — Cartes prioritaires recrutement v76</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
+<header><b>TRIBU — Interruption recrutement v77</b><span class="badge" id="playerCountBadge">mode test</span><button id="restart">Recommencer</button></header>
 <main>
 <div class="playerRail" id="playerRail"></div>
 <div class="boardCol">
@@ -1095,12 +1095,16 @@ function consumeDivination(s){
  return true;
 }
 function resetRecruitmentForPriorityCard(actor,label){
- // Une carte prioritaire jouée pendant le recrutement annule d'abord tout le recrutement
- // en cours, exactement comme « Recommencer le recrutement », puis sa résolution prend la priorité.
- if(G.phase!=='recruit'||actor!==G.active||!recruitSnapshot||recruitSnapshot.player!==G.active)return false;
- p().gold=recruitSnapshot.gold;
+ // Toute Divination / Section de l'ombre jouée pendant un recrutement interrompt
+ // le recrutement du joueur ACTIF, même si la carte est jouée par un autre joueur.
+ // On restaure exactement le snapshot du début de recrutement, puis la carte se résout
+ // en priorité. G.phase reste sur 'recruit' afin de reprendre ce recrutement ensuite.
+ if(G.phase!=='recruit'||!recruitSnapshot||recruitSnapshot.player!==G.active)return false;
+ const recruiter=G.active;
+ G.players[recruiter].gold=recruitSnapshot.gold;
  Object.keys(recruitSnapshot.units).forEach(r=>G.b[r].units=recruitSnapshot.units[r]);
- log(label+' pendant le recrutement : recrutement remis à zéro (Or et unités restaurés), puis résolution prioritaire.');
+ const who=(actor===recruiter?'':(' jouée par '+p(actor).name));
+ log(label+who+' interrompt le recrutement de '+p(recruiter).name+' : recrutement remis à zéro (Or et unités restaurés), puis résolution prioritaire.');
  render();
  return true;
 }
@@ -3989,6 +3993,19 @@ function render(){
  }
  if(handPlayer===G.active&&!isBot()&&!choiceState&&!goldReaction&&canUseMonturesMove(handPlayer)&&c.name==='Montures'){
    d.classList.add('playablePermanent');d.title='Montures : +1 déplacement à toutes vos unités';d.onclick=()=>playMonturesMovement(handIndex);
+ }
+ // v78 — Toute carte jouée pendant le recrutement interrompt ce recrutement.
+ // Divination et Section de l'ombre possèdent déjà leur remise à zéro au moment où
+ // elles sont effectivement engagées ; pour toutes les autres cartes jouables depuis
+ // la main, on applique exactement le même snapshot AVANT leur résolution.
+ if(d.onclick&&c.name!=='Divination de l’Oracle'&&c.name!=='Section de l’ombre'){
+   const cardAction=d.onclick;
+   d.onclick=(ev)=>{
+     if(G.phase==='recruit'&&recruitSnapshot&&recruitSnapshot.player===G.active){
+       resetRecruitmentForPriorityCard(handPlayer,c.name);
+     }
+     return cardAction.call(d,ev);
+   };
  }
  h.appendChild(d)
 });
